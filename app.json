@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Legalia",
+    "slug": "legalia",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "legalia",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "jsEngine": "jsc",
+      "bundleIdentifier": "com.legalia.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "jsEngine": "jsc",
+      "usesCleartextTraffic": true,
+      "package": "com.legalia.app",
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE"
+      ]
+    },
+    "experiments": {
+      "typedRoutes": false
+    },
+    "plugins": [
+      "sentry-expo"
+    ]
+  }
+}
