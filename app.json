@@ -17,7 +17,6 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "jsEngine": "jsc",
       "bundleIdentifier": "com.legalia.app"
     },
     "android": {
@@ -25,7 +24,6 @@
         "foregroundImage": "./assets/legalia-logo.png",
         "backgroundColor": "#FFFFFF"
       },
-      "jsEngine": "jsc",
       "package": "com.legalia.app",
       "permissions": [
         "android.permission.INTERNET",
