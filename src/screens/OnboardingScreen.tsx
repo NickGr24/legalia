@@ -14,21 +14,21 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '@/services/supabaseClient';
-import { profileService } from '@/services/profileService';
-import { Slide } from '@/components/Slide';
-import { BottomStepper } from '@/components/BottomStepper';
-import { AppText } from '@/components/AppText';
-import { AppButton } from '@/components/AppButton';
-import { Checkbox } from '@/components/Checkbox';
-import { UniversityPicker } from '@/components/UniversityPicker';
-import { popularUniversities } from '@/data/popularUniversities';
-import { spacing, borderRadius, fontSize, shadows, commonStyles } from '@/utils/styles';
-import { colors } from '@/utils/colors';
-import { contentContainer, safeAreaPadding } from '@/utils/layout';
-import { isValidEmail, isValidPassword, isValidName, isValidUniversity } from '@/utils/validators';
-import { t } from '@/i18n';
-import { RootStackParamList } from '@/utils/types';
+import { supabase } from '../services/supabaseClient';
+import { profileService } from '../services/profileService';
+import { Slide } from '../components/Slide';
+import { BottomStepper } from '../components/BottomStepper';
+import { AppText } from '../components/AppText';
+import { AppButton } from '../components/AppButton';
+import { Checkbox } from '../components/Checkbox';
+import { UniversityPicker } from '../components/UniversityPicker';
+import { popularUniversities } from '../data/popularUniversities';
+import { spacing, borderRadius, fontSize, shadows, commonStyles } from '../utils/styles';
+import { colors } from '../utils/colors';
+import { contentContainer, safeAreaPadding } from '../utils/layout';
+import { isValidEmail, isValidPassword, isValidName, isValidUniversity } from '../utils/validators';
+import { t } from '../i18n';
+import { RootStackParamList } from '../utils/types';
 
 const { width: screenWidth } = Dimensions.get('window');
 const TOTAL_SLIDES = 4;
@@ -253,7 +253,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
           {/* Name input */}
           <View style={styles.inputContainer}>
             <TextInput
-              style={[styles.input, errors.name && styles.inputError]}
+              style={[styles.input, errors.name ? styles.inputError : null]}
               placeholder={t('field_name')}
               placeholderTextColor={colors.text.tertiary}
               value={formData.name}
@@ -268,7 +268,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
           {/* Email input */}
           <View style={styles.inputContainer}>
             <TextInput
-              style={[styles.input, errors.email && styles.inputError]}
+              style={[styles.input, errors.email ? styles.inputError : null]}
               placeholder={t('field_email')}
               placeholderTextColor={colors.text.tertiary}
               value={formData.email}
@@ -285,7 +285,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
           {/* Password input */}
           <View style={styles.inputContainer}>
             <TextInput
-              style={[styles.input, errors.password && styles.inputError]}
+              style={[styles.input, errors.password ? styles.inputError : null]}
               placeholder={t('field_password')}
               placeholderTextColor={colors.text.tertiary}
               value={formData.password}

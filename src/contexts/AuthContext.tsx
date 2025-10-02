@@ -42,50 +42,41 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // Changed to false - don't wait for auth!
 
   useEffect(() => {
-    // Get initial session
+    let isMounted = true;
+
     const getInitialSession = async () => {
       try {
+        console.log('🔐 Initializing auth...')
         const { data: { session }, error } = await supabase.auth.getSession()
+
+        if (!isMounted) return;
+
         if (error) {
-          console.error('Error getting initial session:', error)
+          console.error('❌ Error getting initial session:', error)
         } else {
+          console.log('✅ Session retrieved:', session ? 'authenticated' : 'not authenticated')
           setSession(session)
           setUser(session?.user ?? null)
-          
-          // Ensure user profile exists if user is authenticated
-          if (session?.user) {
-            try {
-              const profile = await supabaseService.getUserProfile(session.user.id)
-              if (!profile) {
-                await supabaseService.createUserProfile()
-              }
-            } catch (error) {
-              console.error('Error handling user profile:', error)
-            }
-          }
         }
       } catch (error) {
-        console.error('Error getting initial session:', error)
-      } finally {
-        setLoading(false)
+        console.error('❌ Critical error during auth initialization:', error)
       }
     }
 
-    getInitialSession()
+    getInitialSession();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        
+        if (!isMounted) return;
+
         setSession(session)
         setUser(session?.user ?? null)
-        setLoading(false)
 
         if (event === 'SIGNED_IN' && session?.user) {
-          // Ensure user profile exists
           try {
             const profile = await supabaseService.getUserProfile(session.user.id)
             if (!profile) {
@@ -94,13 +85,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           } catch (error) {
             console.error('Error handling user profile on sign in:', error)
           }
-        } else if (event === 'SIGNED_OUT') {
-        } else if (event === 'TOKEN_REFRESHED') {
         }
       }
     )
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe()
     }
   }, [])

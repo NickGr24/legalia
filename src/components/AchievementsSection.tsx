@@ -8,7 +8,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Animated } from 'react-native';
 
 import { colors } from '../utils/colors';
 import { spacing, borderRadius, fontSize, fontWeight, shadows, fontConfig } from '../utils/styles';
@@ -201,7 +201,7 @@ export const AchievementsSection: React.FC<AchievementsSectionProps> = ({
     <View style={styles.container}>
       {/* Stats Overview */}
       {stats && (
-        <Animated.View entering={FadeInDown.delay(100)} style={styles.statsContainer}>
+        <View style={styles.statsContainer}>
           <Text style={styles.statsTitle}>Progres Realizări</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
@@ -221,7 +221,7 @@ export const AchievementsSection: React.FC<AchievementsSectionProps> = ({
               <Text style={styles.statLabel}>Puncte</Text>
             </View>
           </View>
-        </Animated.View>
+        </View>
       )}
 
       {/* Category Filter */}
@@ -258,14 +258,14 @@ export const AchievementsSection: React.FC<AchievementsSectionProps> = ({
           const achievementProgress = progress[achievement.id];
 
           return (
-            <Animated.View key={achievement.id} entering={FadeInDown.delay(index * 50)}>
+            <View key={achievement.id}>
               <AchievementCard
                 achievement={achievement}
                 userAchievement={userAchievement || null}
                 progress={achievementProgress || null}
                 onPress={() => onAchievementPress?.(achievement)}
               />
-            </Animated.View>
+            </View>
           );
         })}
       </ScrollView>

@@ -1,9 +1,9 @@
 import React from 'react';
 import { TouchableOpacity, TouchableOpacityProps, StyleSheet, ViewStyle, ActivityIndicator } from 'react-native';
 import { AppText } from './AppText';
-import { colors } from '@/utils/colors';
-import { shadowStyles, borderRadii } from '@/utils/shadow';
-import { layoutSpacing } from '@/utils/layout';
+import { colors } from '../utils/colors';
+import { shadowStyles, borderRadii } from '../utils/shadow';
+import { layoutSpacing } from '../utils/layout';
 
 interface AppButtonProps extends Omit<TouchableOpacityProps, 'style'> {
   variant?: 'primary' | 'secondary' | 'text' | 'outline';

@@ -7,26 +7,16 @@ import {
   TouchableOpacity,
   Platform,
   Alert,
+  Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import Animated, {
-  useAnimatedStyle,
-  interpolate,
-  useAnimatedGestureHandler,
-  withSpring,
-  runOnJS,
-} from 'react-native-reanimated';
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
-import { useBurgerMenu } from '@/contexts/BurgerMenuContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { colors } from '@/utils/colors';
-import { fonts } from '@/utils/fonts';
-import { getUniversityLogoUrl } from '@/services/storage';
-import { t } from '@/i18n';
+import { useBurgerMenu } from '../contexts/BurgerMenuContext';
+import { useAuth } from '../contexts/AuthContext';
+import { colors } from '../utils/colors';
+import { fonts } from '../utils/fonts';
+import { getUniversityLogoUrl } from '../services/storage';
+import { t } from '../i18n';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PANEL_WIDTH = Math.min(SCREEN_WIDTH * 0.78, 320);
@@ -136,44 +126,33 @@ export const BurgerDrawer: React.FC = () => {
     onPress: handleSignOut,
   };
 
-  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, { startX: number }>({
-    onStart: (_, context) => {
-      context.startX = progress.value * PANEL_WIDTH;
-    },
-    onActive: (event, context) => {
-      const translationX = event.translationX;
-      const currentX = context.startX + translationX;
-      const newProgress = Math.max(0, Math.min(1, currentX / PANEL_WIDTH));
-      progress.value = newProgress;
-    },
-    onEnd: (event) => {
-      const shouldClose =
-        event.translationX < -SWIPE_THRESHOLD ||
-        event.velocityX < -VELOCITY_THRESHOLD;
-      
-      if (shouldClose) {
-        progress.value = withSpring(0);
-        runOnJS(close)();
-      } else {
-        progress.value = withSpring(1);
-      }
-    },
-  });
+  // Simple animated progress value using React Native Animated
+  const animatedProgress = React.useRef(new Animated.Value(isOpen ? 1 : 0)).current;
+  
+  React.useEffect(() => {
+    Animated.timing(animatedProgress, {
+      toValue: isOpen ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [isOpen, animatedProgress]);
 
-  const backdropStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(progress.value, [0, 1], [0, 0.5]);
-    return {
-      opacity,
-    };
-  });
+  const backdropStyle = {
+    opacity: animatedProgress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 0.5],
+    }),
+  };
 
-  const panelStyle = useAnimatedStyle(() => {
-    const translateX = interpolate(progress.value, [0, 1], [-PANEL_WIDTH, 0]);
-    return {
-      transform: [{ translateX }],
-      opacity: 1, // Force full opacity
-    };
-  });
+  const panelStyle = {
+    transform: [{
+      translateX: animatedProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-PANEL_WIDTH, 0],
+      })
+    }],
+    opacity: 1, // Force full opacity
+  };
 
   const renderMenuItem = (item: MenuItem) => (
     <TouchableOpacity
@@ -215,8 +194,7 @@ export const BurgerDrawer: React.FC = () => {
       </Animated.View>
 
       {/* Panel */}
-      <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View style={[styles.panel, panelStyle, { paddingTop: insets.top }]}>
+      <Animated.View style={[styles.panel, panelStyle, { paddingTop: insets.top }]}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.avatarContainer}>
@@ -257,7 +235,6 @@ export const BurgerDrawer: React.FC = () => {
             {renderMenuItem(signOutItem)}
           </View>
         </Animated.View>
-      </PanGestureHandler>
     </View>
   );
 };

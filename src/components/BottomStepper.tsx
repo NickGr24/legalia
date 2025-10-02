@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '@/utils/colors';
-import { layoutSpacing } from '@/utils/layout';
-import { borderRadii } from '@/utils/shadow';
-import { t } from '@/i18n';
+import { colors } from '../utils/colors';
+import { layoutSpacing } from '../utils/layout';
+import { borderRadii } from '../utils/shadow';
+import { t } from '../i18n';
 import { AppButton } from './AppButton';
 import { PaginationDots } from './PaginationDots';
 

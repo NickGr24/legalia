@@ -1,14 +1,13 @@
-import React from 'react';
-import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Image, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText } from './AppText';
-import { colors } from '@/utils/colors';
-import { shadowStyles, borderRadii } from '@/utils/shadow';
-import { layoutSpacing } from '@/utils/layout';
-import { getUniversityLogo } from '@/utils/universityLogos';
-import { UniversityLeaderboardRow } from '@/services/leaderboardService';
+import { colors } from '../utils/colors';
+import { shadowStyles, borderRadii } from '../utils/shadow';
+import { layoutSpacing } from '../utils/layout';
+import { getUniversityLogo } from '../utils/universityLogos';
+import { UniversityLeaderboardRow } from '../services/leaderboardService';
 
 interface UniversityLeaderboardCardProps {
   university: UniversityLeaderboardRow;
@@ -21,6 +20,24 @@ export const UniversityLeaderboardCard: React.FC<UniversityLeaderboardCardProps>
   index,
   isTopThree = false,
 }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const translateAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      delay: index * 100,
+      useNativeDriver: true,
+    }).start();
+
+    Animated.timing(translateAnim, {
+      toValue: 0,
+      duration: 600,
+      delay: index * 100,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim, translateAnim, index]);
   const localLogo = getUniversityLogo(university.university_name);
   const isWinner = university.rank_position === 1;
   const isSecond = university.rank_position === 2;
@@ -49,11 +66,14 @@ export const UniversityLeaderboardCard: React.FC<UniversityLeaderboardCardProps>
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(index * 100).duration(600)}
       style={[
         styles.container,
         isTopThree && styles.topThreeContainer,
         isWinner && styles.winnerContainer,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: translateAnim }],
+        }
       ]}
     >
       <TouchableOpacity activeOpacity={0.9}>

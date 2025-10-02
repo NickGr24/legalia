@@ -113,7 +113,7 @@ export const RegisterScreen: React.FC = () => {
             <View style={styles.header}>
               <View style={styles.logoContainer}>
                 <Image 
-                  source={require('../../assets/icon.png')} 
+                  source={require('../../assets/legalia-logo.png')} 
                   style={styles.logo}
                   resizeMode="contain"
                 />

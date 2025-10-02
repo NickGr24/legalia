@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,11 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { colors } from '../utils/colors';
 import { contentContainer, layoutSpacing } from '../utils/layout';
@@ -44,10 +44,68 @@ export const LeaderboardScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [usersData, setUsersData] = useState<UserLeaderboardRow[]>([]);
   const [universitiesData, setUniversitiesData] = useState<UniversityLeaderboardRow[]>([]);
+  
+  // Animation values
+  const headerFadeAnim = useRef(new Animated.Value(0)).current;
+  const headerSlideAnim = useRef(new Animated.Value(-50)).current;
+  const tabFadeAnim = useRef(new Animated.Value(0)).current;
+  const tabSlideAnim = useRef(new Animated.Value(50)).current;
+  const contentFadeAnim = useRef(new Animated.Value(0)).current;
+  const contentSlideAnim = useRef(new Animated.Value(50)).current;
 
   useEffect(() => {
     loadLeaderboardData();
   }, [user?.id]);
+
+  const startAnimations = () => {
+    // Reset all animation values
+    headerFadeAnim.setValue(0);
+    headerSlideAnim.setValue(-50);
+    tabFadeAnim.setValue(0);
+    tabSlideAnim.setValue(50);
+    contentFadeAnim.setValue(0);
+    contentSlideAnim.setValue(50);
+
+    // Start staggered animations
+    Animated.stagger(100, [
+      Animated.parallel([
+        Animated.timing(headerFadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(headerSlideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.timing(tabFadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(tabSlideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.timing(contentFadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(contentSlideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  };
 
   const loadLeaderboardData = async () => {
     try {
@@ -71,6 +129,8 @@ export const LeaderboardScreen: React.FC = () => {
     } finally {
       setLoading(false);
       setRefreshing(false);
+      // Start animations after loading
+      setTimeout(startAnimations, 100);
     }
   };
 
@@ -106,10 +166,7 @@ export const LeaderboardScreen: React.FC = () => {
 
   const renderUserItem = (item: UserLeaderboardRow, index: number) => {
     return (
-      <Animated.View
-        key={`user-${item.user_id}`}
-        entering={FadeInDown.delay(index * 100).duration(600)}
-      >
+      <View key={`user-${item.user_id}`}>
         <View style={styles.leaderboardItem}>
           <View style={styles.rankContainer}>
             <AppText variant="body" style={styles.rankBadge}>{getRankBadge(item.rank_position)}</AppText>
@@ -145,7 +202,7 @@ export const LeaderboardScreen: React.FC = () => {
             </AppText>
           </View>
         </View>
-      </Animated.View>
+      </View>
     );
   };
 
@@ -191,7 +248,15 @@ export const LeaderboardScreen: React.FC = () => {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
+          <Animated.View 
+            style={[
+              styles.header,
+              {
+                opacity: headerFadeAnim,
+                transform: [{ translateY: headerSlideAnim }],
+              }
+            ]}
+          >
             <View style={styles.headerIcon}>
               <Ionicons name="trophy" size={32} color="white" />
             </View>
@@ -205,7 +270,15 @@ export const LeaderboardScreen: React.FC = () => {
         </LinearGradient>
 
         {/* Tab Selector */}
-        <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.tabContainer}>
+        <Animated.View 
+          style={[
+            styles.tabContainer,
+            {
+              opacity: tabFadeAnim,
+              transform: [{ translateY: tabSlideAnim }],
+            }
+          ]}
+        >
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'users' && styles.activeTab]}
             onPress={() => setSelectedTab('users')}
@@ -237,7 +310,15 @@ export const LeaderboardScreen: React.FC = () => {
         </Animated.View>
 
         {/* Leaderboard Content */}
-        <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.leaderboardContainer}>
+        <Animated.View 
+          style={[
+            styles.leaderboardContainer,
+            {
+              opacity: contentFadeAnim,
+              transform: [{ translateY: contentSlideAnim }],
+            }
+          ]}
+        >
           {selectedTab === 'users' ? (
             <>
               <AppText variant="subtitle" weight="bold" style={styles.sectionTitle}>
@@ -259,43 +340,15 @@ export const LeaderboardScreen: React.FC = () => {
               )}
             </>
           ) : (
-            <>
-              {currentData.length > 0 ? (
-                <>
-                  {/* Top 3 Podium for Universities */}
-                  {currentData.slice(0, 3).length > 0 && (
-                    <LeaderboardPodium topThree={currentData.slice(0, 3) as UniversityLeaderboardRow[]} />
-                  )}
-
-                  {/* Remaining Universities */}
-                  {currentData.slice(3).length > 0 && (
-                    <>
-                      <AppText variant="subtitle" weight="bold" style={styles.sectionTitle}>
-                        {t('leaderboard_all_universities')}
-                      </AppText>
-                      {currentData.slice(3).map((university, index) => (
-                        <UniversityLeaderboardCard
-                          key={`university-${university.university_name}`}
-                          university={university as UniversityLeaderboardRow}
-                          index={index + 3}
-                          isTopThree={false}
-                        />
-                      ))}
-                    </>
-                  )}
-                </>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Ionicons name="school-outline" size={64} color={colors.text.tertiary} />
-                  <AppText variant="subtitle" weight="bold" style={styles.emptyTitle}>
-                    {t('leaderboard_no_data')}
-                  </AppText>
-                  <AppText variant="body" color="secondary" style={styles.emptySubtitle}>
-                    {t('leaderboard_empty_subtitle')}
-                  </AppText>
-                </View>
-              )}
-            </>
+            <View style={styles.comingSoonContainer}>
+              <Ionicons name="time-outline" size={64} color={colors.text.tertiary} />
+              <AppText variant="subtitle" weight="bold" style={styles.comingSoonTitle}>
+                În curând
+              </AppText>
+              <AppText variant="body" color="secondary" style={styles.comingSoonSubtitle}>
+                Clasamentul universităților va fi disponibil în curând
+              </AppText>
+            </View>
           )}
         </Animated.View>
 
@@ -448,13 +501,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: layoutSpacing.md,
     minWidth: 60,
+    justifyContent: 'center',
   },
   rankBadge: {
-    fontSize: 32,
+    fontSize: 28,
     marginBottom: layoutSpacing.xs,
     textShadowColor: 'rgba(0,0,0,0.1)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+    textAlign: 'center',
+    lineHeight: 32,
   },
   rankText: {
     color: colors.text.secondary,
@@ -555,5 +611,19 @@ const styles = StyleSheet.create({
   },
   footerSpacing: {
     height: Platform.OS === 'android' ? layoutSpacing.xxl : layoutSpacing.lg,
+  },
+  comingSoonContainer: {
+    alignItems: 'center',
+    paddingVertical: layoutSpacing.xxl,
+  },
+  comingSoonTitle: {
+    color: colors.text.secondary,
+    marginTop: layoutSpacing.lg,
+    marginBottom: layoutSpacing.sm,
+  },
+  comingSoonSubtitle: {
+    color: colors.text.tertiary,
+    textAlign: 'center',
+    paddingHorizontal: layoutSpacing.lg,
   },
 });

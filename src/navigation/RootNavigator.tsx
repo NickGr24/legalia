@@ -11,9 +11,9 @@ import { QuizResultScreen } from '../screens/QuizResultScreen';
 import { RootStackParamList } from '../utils/types';
 import { colors } from '../utils/colors';
 import { useAuth } from '../contexts/AuthContext';
-import { BurgerMenuProvider } from '@/contexts/BurgerMenuContext';
-import { BurgerDrawer } from '@/components/BurgerDrawer';
-import { BurgerButton } from '@/components/BurgerButton';
+import { BurgerMenuProvider } from '../contexts/BurgerMenuContext';
+import { BurgerDrawer } from '../components/BurgerDrawer';
+import { BurgerButton } from '../components/BurgerButton';
 
 const Stack = createStackNavigator<RootStackParamList>();
 

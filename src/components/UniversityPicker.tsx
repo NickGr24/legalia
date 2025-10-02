@@ -12,13 +12,13 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { spacing, borderRadius, fontSize, shadows, commonStyles } from '@/utils/styles';
-import { logWarning } from '@/utils/logger';
-import { colors } from '@/utils/colors';
-import { t } from '@/i18n';
-import { getUniversityLogo } from '@/utils/universityLogos';
-import { logoStorageService } from '@/services/storageService';
-import { createUrlSlug } from '@/utils/slugify';
+import { spacing, borderRadius, fontSize, shadows, commonStyles } from '../utils/styles';
+import { logWarning } from '../utils/logger';
+import { colors } from '../utils/colors';
+import { t } from '../i18n';
+import { getUniversityLogo } from '../utils/universityLogos';
+import { logoStorageService } from '../services/storageService';
+import { createUrlSlug } from '../utils/slugify';
 
 const { width: screenWidth } = Dimensions.get('window');
 

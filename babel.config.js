@@ -3,7 +3,19 @@ module.exports = function(api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      // 'react-native-worklets/plugin', // Временно отключено для отладки
+      ['module-resolver', {
+        root: ['./src'],
+        alias: {
+          '@': './src',
+          '@/components': './src/components',
+          '@/screens': './src/screens',
+          '@/navigation': './src/navigation',
+          '@/utils': './src/utils',
+          '@/services': './src/services',
+          '@/assets': './src/assets'
+        },
+      }],
+      ['transform-remove-console', { exclude: ['error', 'warn'] }],
     ],
   };
 }; 

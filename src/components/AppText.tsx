@@ -1,8 +1,8 @@
 import React from 'react';
 import { Text, TextProps, StyleSheet } from 'react-native';
-import { colors } from '@/utils/colors';
-import { fontConfig } from '@/utils/fonts';
-import { typography } from '@/utils/layout';
+import { colors } from '../utils/colors';
+import { fontConfig } from '../utils/fonts';
+import { typography } from '../utils/layout';
 
 interface AppTextProps extends TextProps {
   variant?: 'title' | 'subtitle' | 'body' | 'caption' | 'button';

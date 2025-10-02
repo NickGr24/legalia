@@ -1,19 +1,34 @@
 import { createClient } from '@supabase/supabase-js'
 import * as SecureStore from 'expo-secure-store'
-import { Platform } from 'react-native'
+import { Platform, Alert } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { Database } from '@/utils/supabaseTypes'
+import Constants from 'expo-constants'
+import { Database } from '../utils/supabaseTypes'
 
-// Environment variables - Replace these with your actual Supabase project credentials
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'YOUR_SUPABASE_URL'
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY'
+// Try to get from environment variables first, then fall back to app.json extra
+const supabaseUrl =
+  process.env.EXPO_PUBLIC_SUPABASE_URL ||
+  Constants.expoConfig?.extra?.supabaseUrl ||
+  Constants.manifest?.extra?.supabaseUrl ||
+  Constants.manifest2?.extra?.expoClient?.extra?.supabaseUrl ||
+  'https://qcdkkpgradcuochvplvy.supabase.co'
 
-if (!supabaseUrl || supabaseUrl === 'YOUR_SUPABASE_URL') {
-  throw new Error('Missing EXPO_PUBLIC_SUPABASE_URL environment variable')
-}
+const supabaseAnonKey =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  Constants.expoConfig?.extra?.supabaseAnonKey ||
+  Constants.manifest?.extra?.supabaseAnonKey ||
+  Constants.manifest2?.extra?.expoClient?.extra?.supabaseAnonKey ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZGtrcGdyYWRjdW9jaHZwbHZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5ODU5MTksImV4cCI6MjA2OTU2MTkxOX0.PFuWlhUCuHXP7MygIrfwgTNNQ226oaVbMvHiHLNpXg4'
 
-if (!supabaseAnonKey || supabaseAnonKey === 'YOUR_SUPABASE_ANON_KEY') {
-  throw new Error('Missing EXPO_PUBLIC_SUPABASE_ANON_KEY environment variable')
+// Log configuration for debugging (only in dev)
+if (__DEV__) {
+  console.log('Supabase Config:', {
+    url: supabaseUrl?.substring(0, 30) + '...',
+    hasKey: !!supabaseAnonKey,
+    source: process.env.EXPO_PUBLIC_SUPABASE_URL ? 'env' :
+            Constants.expoConfig?.extra?.supabaseUrl ? 'expoConfig' :
+            Constants.manifest?.extra?.supabaseUrl ? 'manifest' : 'hardcoded'
+  })
 }
 
 // Custom storage adapter that uses SecureStore on native and AsyncStorage on web

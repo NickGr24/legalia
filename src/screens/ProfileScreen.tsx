@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -7,12 +7,12 @@ import {
   TouchableOpacity, 
   Alert,
   ActivityIndicator,
-  Platform
+  Platform,
+  Animated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { colors } from '../utils/colors';
 import { spacing, borderRadius, fontSize, fontWeight, shadows, fontConfig } from '../utils/styles';
@@ -32,10 +32,53 @@ export const ProfileScreen: React.FC = () => {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [showAchievementPopup, setShowAchievementPopup] = useState(false);
+  
+  // Animation values
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const statsAnim = useRef(new Animated.Value(0)).current;
+  const achievementsAnim = useRef(new Animated.Value(0)).current;
+  const settingsAnim = useRef(new Animated.Value(0)).current;
+  const accountAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadUserData();
-  }, []);
+    
+    // Start entrance animations
+    const animations = [
+      Animated.timing(headerAnim, {
+        toValue: 1,
+        duration: 600,
+        delay: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(statsAnim, {
+        toValue: 1,
+        duration: 600,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(achievementsAnim, {
+        toValue: 1,
+        duration: 600,
+        delay: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(settingsAnim, {
+        toValue: 1,
+        duration: 600,
+        delay: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(accountAnim, {
+        toValue: 1,
+        duration: 600,
+        delay: 500,
+        useNativeDriver: true,
+      }),
+    ];
+    
+    Animated.stagger(100, animations).start();
+  }, [headerAnim, statsAnim, achievementsAnim, settingsAnim, accountAnim]);
 
   const loadUserData = async () => {
     if (!user) return;
@@ -146,7 +189,20 @@ export const ProfileScreen: React.FC = () => {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.profileHeader}>
+          <Animated.View 
+            style={[
+              styles.profileHeader,
+              {
+                opacity: headerAnim,
+                transform: [{
+                  translateY: headerAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-20, 0],
+                  })
+                }]
+              }
+            ]}
+          >
             <View style={styles.avatarContainer}>
               <Ionicons name="person" size={48} color="white" />
             </View>
@@ -166,7 +222,20 @@ export const ProfileScreen: React.FC = () => {
         </LinearGradient>
 
         {/* Stats Section */}
-        <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
+        <Animated.View 
+          style={[
+            styles.section,
+            {
+              opacity: statsAnim,
+              transform: [{
+                translateY: statsAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                })
+              }]
+            }
+          ]}
+        >
           <Text style={styles.sectionTitle}>Statistici</Text>
           
           <View style={styles.statsGrid}>
@@ -216,13 +285,39 @@ export const ProfileScreen: React.FC = () => {
         </Animated.View>
 
         {/* Achievements Section */}
-        <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
+        <Animated.View 
+          style={[
+            styles.section,
+            {
+              opacity: achievementsAnim,
+              transform: [{
+                translateY: achievementsAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                })
+              }]
+            }
+          ]}
+        >
           <Text style={styles.sectionTitle}>Realizări</Text>
           <AchievementsSection onAchievementPress={handleAchievementPress} />
         </Animated.View>
 
         {/* Settings Section */}
-        <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
+        <Animated.View 
+          style={[
+            styles.section,
+            {
+              opacity: settingsAnim,
+              transform: [{
+                translateY: settingsAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                })
+              }]
+            }
+          ]}
+        >
           <Text style={styles.sectionTitle}>Setări</Text>
           
           <View style={styles.settingsContainer}>
@@ -262,7 +357,20 @@ export const ProfileScreen: React.FC = () => {
         </Animated.View>
 
         {/* Account Section */}
-        <Animated.View entering={FadeInDown.delay(500).duration(600)} style={styles.section}>
+        <Animated.View 
+          style={[
+            styles.section,
+            {
+              opacity: accountAnim,
+              transform: [{
+                translateY: accountAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                })
+              }]
+            }
+          ]}
+        >
           <Text style={styles.sectionTitle}>Cont</Text>
           
           <View style={styles.settingsContainer}>

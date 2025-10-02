@@ -1,23 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, StyleSheet, Text, Platform } from 'react-native';
+import { View, StyleSheet, Text, Platform, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  interpolate,
-  Extrapolate,
-} from 'react-native-reanimated';
 import { HomeScreen } from '../screens/HomeScreen';
 import { LeaderboardScreen } from '../screens/LeaderboardScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { colors } from '../utils/colors';
 import { spacing, borderRadius, fontSize, fontWeight, shadows } from '../utils/styles';
 import { TabParamList } from '../utils/types';
-import { BurgerButton } from '@/components/BurgerButton';
+import { BurgerButton } from '../components/BurgerButton';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -29,35 +21,27 @@ interface TabBarIconProps {
 }
 
 const TabBarIcon: React.FC<TabBarIconProps> = ({ name, focused, color, size }) => {
-  const scale = useSharedValue(focused ? 1 : 0.8);
-  const opacity = useSharedValue(focused ? 1 : 0.7);
-  const indicatorScale = useSharedValue(focused ? 1 : 0);
+  const scale = useRef(new Animated.Value(focused ? 1 : 0.8)).current;
+  const opacity = useRef(new Animated.Value(focused ? 1 : 0.7)).current;
+  const indicatorScale = useRef(new Animated.Value(focused ? 1 : 0)).current;
   
   useEffect(() => {
-    scale.value = withSpring(focused ? 1.1 : 0.9, {
-      damping: 15,
-      stiffness: 200,
-    });
-    
-    opacity.value = withTiming(focused ? 1 : 0.6, {
-      duration: 200,
-    });
-    
-    indicatorScale.value = withSpring(focused ? 1 : 0, {
-      damping: 12,
-      stiffness: 150,
-    });
-  }, [focused]);
-
-  const iconAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
-  const indicatorAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: indicatorScale.value }],
-    opacity: indicatorScale.value,
-  }));
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: focused ? 1.1 : 0.9,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: focused ? 1 : 0.6,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.spring(indicatorScale, {
+        toValue: focused ? 1 : 0,
+        useNativeDriver: true,
+      })
+    ]).start();
+  }, [focused, scale, opacity, indicatorScale]);
 
   return (
     <View style={styles.tabIconContainer}>
@@ -65,13 +49,21 @@ const TabBarIcon: React.FC<TabBarIconProps> = ({ name, focused, color, size }) =
       <Animated.View 
         style={[
           styles.tabIndicator, 
-          indicatorAnimatedStyle,
-          { backgroundColor: `${colors.primary.main}15` }
+          {
+            transform: [{ scale: indicatorScale }],
+            opacity: indicatorScale,
+            backgroundColor: `${colors.primary.main}15`
+          }
         ]} 
       />
       
       {/* Animated Icon */}
-      <Animated.View style={iconAnimatedStyle}>
+      <Animated.View 
+        style={{
+          transform: [{ scale: scale }],
+          opacity: opacity,
+        }}
+      >
         <Ionicons name={name} size={size} color={color} />
       </Animated.View>
       
@@ -80,8 +72,11 @@ const TabBarIcon: React.FC<TabBarIconProps> = ({ name, focused, color, size }) =
         <Animated.View 
           style={[
             styles.activeDot, 
-            indicatorAnimatedStyle,
-            { backgroundColor: colors.primary.main }
+            {
+              transform: [{ scale: indicatorScale }],
+              opacity: indicatorScale,
+              backgroundColor: colors.primary.main
+            }
           ]} 
         />
       )}

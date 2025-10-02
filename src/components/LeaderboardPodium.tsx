@@ -2,13 +2,13 @@ import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInUp, ZoomIn } from 'react-native-reanimated';
+import { Animated } from 'react-native';
 import { AppText } from './AppText';
-import { colors } from '@/utils/colors';
-import { shadowStyles, borderRadii } from '@/utils/shadow';
-import { layoutSpacing } from '@/utils/layout';
-import { getUniversityLogo } from '@/utils/universityLogos';
-import { UniversityLeaderboardRow } from '@/services/leaderboardService';
+import { colors } from '../utils/colors';
+import { shadowStyles, borderRadii } from '../utils/shadow';
+import { layoutSpacing } from '../utils/layout';
+import { getUniversityLogo } from '../utils/universityLogos';
+import { UniversityLeaderboardRow } from '../services/leaderboardService';
 
 interface LeaderboardPodiumProps {
   topThree: UniversityLeaderboardRow[];
@@ -49,12 +49,10 @@ const PodiumPosition: React.FC<PodiumPositionProps> = ({ university, position, h
 
   return (
     <Animated.View 
-      entering={ZoomIn.delay(position * 200).duration(800)}
       style={[styles.positionContainer, { marginTop: position === 1 ? 0 : 20 }]}
     >
       {/* Trophy Icon */}
       <Animated.View 
-        entering={FadeInUp.delay(position * 200 + 400).duration(600)}
         style={[styles.trophyContainer, { backgroundColor: getTrophyColor() }]}
       >
         <Ionicons name={getTrophyIcon()} size={24} color="#FFFFFF" />
@@ -130,7 +128,6 @@ export const LeaderboardPodium: React.FC<LeaderboardPodiumProps> = ({ topThree }
 
   return (
     <Animated.View 
-      entering={FadeInUp.duration(1000)}
       style={styles.container}
     >
       <View style={styles.podiumContainer}>

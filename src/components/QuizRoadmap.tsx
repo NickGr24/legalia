@@ -2,27 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { 
-  FadeInDown, 
-  FadeInUp, 
-  ZoomIn, 
-  SlideInLeft, 
-  SlideInRight,
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withSequence,
-  withDelay,
-  runOnJS,
-  useAnimatedScrollHandler,
-  useAnimatedRef,
-  scrollTo,
-  useDerivedValue,
-  withRepeat,
-  withTiming,
-  interpolate,
-  Extrapolate
-} from 'react-native-reanimated';
+import { Animated } from 'react-native';
 import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 
 import { colors } from '../utils/colors';
@@ -58,7 +38,6 @@ const QuizNode: React.FC<{
   onQuizPress: (quizId: number, quizTitle: string) => void;
   visibleQuizzes: Set<number>;
   addVisibleQuiz: (index: number) => void;
-  getQuizAnimation: (index: number) => any;
 }> = ({ 
   quiz, 
   index, 
@@ -67,60 +46,107 @@ const QuizNode: React.FC<{
   iconName, 
   onQuizPress, 
   visibleQuizzes, 
-  addVisibleQuiz, 
-  getQuizAnimation 
+  addVisibleQuiz
 }) => {
-  // Анимация пульсации для текущего квиза
-  const pulseScale = useSharedValue(1);
-  const shadowOffset = useSharedValue(0);
-  const glowOpacity = useSharedValue(0);
+  // Simple animation for current quiz
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  const shadowOffset = useRef(new Animated.Value(0)).current;
+  const glowOpacity = useRef(new Animated.Value(0)).current;
   
   useEffect(() => {
     if (quiz.isCurrent) {
-      pulseScale.value = withSequence(
-        withDelay(1000, withSpring(1.05, { damping: 2, stiffness: 100 })),
-        withSpring(1, { damping: 2, stiffness: 100 })
-      );
+      Animated.sequence([
+        Animated.delay(1000),
+        Animated.spring(pulseScale, {
+          toValue: 1.05,
+          useNativeDriver: true,
+        }),
+        Animated.spring(pulseScale, {
+          toValue: 1,
+          useNativeDriver: true,
+        })
+      ]).start();
     }
-  }, [quiz.isCurrent]);
+  }, [quiz.isCurrent, pulseScale]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  const animatedStyle = {
     transform: [
-      { scale: pulseScale.value * theme.size * interpolate(shadowOffset.value, [0, 1], [1, 1.02], Extrapolate.CLAMP) },
+      { 
+        scale: Animated.multiply(
+          pulseScale,
+          shadowOffset.interpolate({
+            inputRange: [0, 1],
+            outputRange: [theme.size, theme.size * 1.02],
+          })
+        )
+      },
       { translateX: position.x }
     ],
     shadowColor: theme.shadowColor,
-  }));
+  };
 
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: glowOpacity.value,
+  const glowStyle = {
+    opacity: glowOpacity,
     transform: [
-      { scale: interpolate(glowOpacity.value, [0, 1], [0.95, 1.1], Extrapolate.CLAMP) }
+      { 
+        scale: glowOpacity.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.95, 1.1],
+        })
+      }
     ],
-  }));
+  };
 
   const handlePressIn = () => {
     if (quiz.isLocked) return;
-    pulseScale.value = withSpring(0.95, { damping: 20, stiffness: 400 });
-    shadowOffset.value = withTiming(1, { duration: 150 });
-    glowOpacity.value = withTiming(0.8, { duration: 150 });
+    Animated.spring(pulseScale, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(shadowOffset, {
+      toValue: 1,
+      duration: 150,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(glowOpacity, {
+      toValue: 0.8,
+      duration: 150,
+      useNativeDriver: true,
+    }).start();
   };
 
   const handlePressOut = () => {
     if (quiz.isLocked) return;
-    pulseScale.value = withSpring(1, { damping: 20, stiffness: 400 });
-    shadowOffset.value = withTiming(0, { duration: 200 });
-    glowOpacity.value = withTiming(0, { duration: 200 });
+    Animated.spring(pulseScale, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(shadowOffset, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(glowOpacity, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
   };
 
   const handlePress = () => {
     // Prevent multiple rapid presses
     if (quiz.isLocked) return;
     
-    pulseScale.value = withSequence(
-      withSpring(1.2),
-      withSpring(1)
-    );
+    Animated.sequence([
+      Animated.spring(pulseScale, {
+        toValue: 1.2,
+        useNativeDriver: true,
+      }),
+      Animated.spring(pulseScale, {
+        toValue: 1,
+        useNativeDriver: true,
+      })
+    ]).start();
     
     // Debounce the quiz press to prevent multiple navigations
     setTimeout(() => {
@@ -128,11 +154,8 @@ const QuizNode: React.FC<{
     }, 100);
   };
 
-  // Определяем анимацию появления
-  const enteringAnimation = getQuizAnimation(index);
-
   return (
-    <Animated.View 
+    <View 
       style={[
         styles.nodeContainer,
         { 
@@ -141,9 +164,8 @@ const QuizNode: React.FC<{
           marginRight: position.isLeft ? 'auto' : 0
         }
       ]}
-      entering={enteringAnimation}
       onLayout={() => {
-        // Добавляем квиз в видимые при первом рендере
+        // Add quiz to visible on first render
         if (!visibleQuizzes.has(index)) {
           addVisibleQuiz(index);
         }
@@ -170,32 +192,29 @@ const QuizNode: React.FC<{
           colors={theme.gradient as any}
           style={[
             styles.nodeGradient,
-            // Убираем borderColor
           ]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          {/* Бейджи статуса */}
+          {/* Status badges */}
           {quiz.isCompleted && (
-            <Animated.View 
+            <View 
               style={styles.completedBadge}
-              entering={ZoomIn.delay(300).duration(400)}
             >
               <Ionicons name="checkmark-circle" size={20} color={theme.badgeColor} />
-            </Animated.View>
+            </View>
           )}
           
           {quiz.isCurrent && (
-            <Animated.View 
+            <View 
               style={styles.currentBadge}
-              entering={ZoomIn.delay(300).duration(400)}
             >
               <Ionicons name="play-circle" size={20} color={theme.badgeColor} />
-            </Animated.View>
+            </View>
           )}
 
           <View style={styles.nodeContent}>
-            {/* Иконка */}
+            {/* Icon */}
             <View style={[
               styles.iconContainer,
               quiz.isCurrent && styles.currentIconContainer
@@ -207,7 +226,7 @@ const QuizNode: React.FC<{
               />
             </View>
 
-            {/* Информация о квизе */}
+            {/* Quiz info */}
             <View style={styles.nodeInfo}>
               <Text style={[styles.nodeTitle, { color: theme.textColor }]}>
                 {quiz.title}
@@ -230,16 +249,9 @@ const QuizNode: React.FC<{
               </View>
             </View>
           </View>
-
-          {/* Индикатор статуса */}
-          {/* Убираем statusIndicator - розовую линию внизу */}
-          {/* <View style={[
-            styles.statusIndicator,
-            { backgroundColor: theme.statusColor }
-          ]} /> */}
         </LinearGradient>
       </AnimatedTouchableOpacity>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -249,73 +261,53 @@ export const QuizRoadmap: React.FC<QuizRoadmapProps> = ({
   disciplineName 
 }) => {
   const [visibleQuizzes, setVisibleQuizzes] = useState<Set<number>>(new Set());
-  const scrollViewRef = useAnimatedRef<ScrollView>();
-  const scrollY = useSharedValue(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
   
-  // Shiny эффект для кнопки
-  const shinyAnimation = useSharedValue(0);
+  // Shiny effect for button
+  const shinyAnimation = useRef(new Animated.Value(0)).current;
   
   useEffect(() => {
-    // Запускаем анимацию блеска только один раз с задержкой
+    // Start shiny animation once with delay
     const timer = setTimeout(() => {
-      shinyAnimation.value = withTiming(1, { duration: 2000 });
-    }, 500); // Задержка 500мс перед началом анимации
+      Animated.timing(shinyAnimation, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: true,
+      }).start();
+    }, 500); // 500ms delay before starting animation
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [shinyAnimation]);
   
-  // Анимированный стиль для shiny эффекта
-  const shinyStyle = useAnimatedStyle(() => {
-    const translateX = interpolate(
-      shinyAnimation.value,
-      [0, 1],
-      [-50, 150],
-      Extrapolate.CLAMP
-    );
-    
-    const opacity = interpolate(
-      shinyAnimation.value,
-      [0, 0.3, 0.7, 1],
-      [0, 1, 1, 0],
-      Extrapolate.CLAMP
-    );
-    
-    return {
-      transform: [{ translateX }],
-      opacity,
-    };
-  });
+  // Animated style for shiny effect
+  const shinyStyle = {
+    transform: [{
+      translateX: shinyAnimation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-50, 150],
+      })
+    }],
+    opacity: shinyAnimation.interpolate({
+      inputRange: [0, 0.3, 0.7, 1],
+      outputRange: [0, 1, 1, 0],
+    }),
+  };
 
-  // Создаем Animated.Text компонент для shiny эффекта
-  const AnimatedText = Animated.createAnimatedComponent(Text);
-  
-  // Отслеживаем скролл для анимаций
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
-    },
-  });
+  // Track scroll for animations
+  const scrollHandler = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    { useNativeDriver: false }
+  );
 
-  // Функция для определения, должен ли квиз быть видимым
+  // Function to determine if quiz should be visible
   const isQuizVisible = (index: number) => {
     return visibleQuizzes.has(index);
   };
 
-  // Функция для добавления квиза в видимые при скроллинге
+  // Function to add quiz to visible when scrolling
   const addVisibleQuiz = (index: number) => {
     setVisibleQuizzes(prev => new Set([...prev, index]));
-  };
-
-  // Анимация появления квиза с задержкой
-  const getQuizAnimation = (index: number) => {
-    const isLeft = index % 2 === 0;
-    const delay = index * 150; // Задержка для каждого квиза
-    
-    if (isLeft) {
-      return SlideInLeft.delay(delay).duration(800).springify();
-    } else {
-      return SlideInRight.delay(delay).duration(800).springify();
-    }
   };
 
   const getQuizIcon = (title: string, index: number) => {
@@ -340,25 +332,25 @@ export const QuizRoadmap: React.FC<QuizRoadmapProps> = ({
   };
 
   const getNodePosition = (index: number) => {
-    // Сбалансированный зигзаг с равномерными отступами от центра
+    // Balanced zigzag with even offsets from center
     const isLeft = index % 2 === 0;
-    const baseOffset = width * 0.12; // Базовое смещение 12% от ширины экрана
+    const baseOffset = width * 0.12; // Base offset 12% of screen width
     
-    // Вычисляем безопасное смещение с учетом ширины карточки и отступов
+    // Calculate safe offset considering card width and margins
     const cardWidth = width * 0.7;
-    const containerPadding = spacing.xxl * 2; // Отступы контейнера
-    const cardMargin = spacing.sm * 2; // Отступы карточки
+    const containerPadding = spacing.xxl * 2; // Container margins
+    const cardMargin = spacing.sm * 2; // Card margins
     const availableSpace = width - cardWidth - containerPadding - cardMargin;
-    const maxSafeOffset = Math.max(availableSpace / 2, 20); // Минимум 20px смещения
+    const maxSafeOffset = Math.max(availableSpace / 2, 20); // Minimum 20px offset
     const safeOffset = Math.min(baseOffset, maxSafeOffset);
     
-    // Специальная обработка для первой карточки (index === 0)
+    // Special handling for first card (index === 0)
     let xOffset;
     if (index === 0) {
-      // Первая карточка всегда слева, но с минимальным отступом от края
-      xOffset = -Math.min(safeOffset, 10); // Ограничиваем смещение для первой карточки
+      // First card always left, but with minimal edge offset
+      xOffset = -Math.min(safeOffset, 10); // Limit offset for first card
     } else {
-      // Применяем смещение в зависимости от позиции
+      // Apply offset based on position
       xOffset = isLeft ? -safeOffset : safeOffset;
     }
     
@@ -414,7 +406,7 @@ export const QuizRoadmap: React.FC<QuizRoadmapProps> = ({
       };
     }
 
-    // Доступные, но не начатые
+    // Available but not started
     return {
       gradient: colors.gradients.accent,
       shadowColor: colors.ai.accent,
@@ -434,7 +426,7 @@ export const QuizRoadmap: React.FC<QuizRoadmapProps> = ({
     const endX = width/2 + endPos.x;
     const midY = pathHeight / 2;
     
-    // Создаем плавную S-образную кривую с контрольными точками
+    // Create smooth S-curve with control points
     const controlY1 = pathHeight * 0.3;
     const controlY2 = pathHeight * 0.7;
     
@@ -449,11 +441,11 @@ export const QuizRoadmap: React.FC<QuizRoadmapProps> = ({
     
     const currentPos = getNodePosition(index);
     const nextPos = getNodePosition(index + 1);
-    const pathHeight = 160; // Увеличиваем высоту с 120 до 160px
+    const pathHeight = 160; // Increase height from 120 to 160px
     
     const pathData = createSmoothPath(currentPos, nextPos, pathHeight);
     
-    // Определяем цвет пути в зависимости от статуса
+    // Determine path color based on status
     const currentQuiz = quizzes[index];
     const nextQuiz = quizzes[index + 1];
     
@@ -469,8 +461,7 @@ export const QuizRoadmap: React.FC<QuizRoadmapProps> = ({
     }
     
     return (
-      <Animated.View 
-        entering={FadeInUp.delay(index * 200 + 400).duration(1000)}
+      <View 
         style={[styles.pathContainer, { height: pathHeight }]}
       >
         <Svg width={width} height={pathHeight} style={styles.svgPath}>
@@ -488,7 +479,7 @@ export const QuizRoadmap: React.FC<QuizRoadmapProps> = ({
             strokeLinecap="round"
           />
         </Svg>
-      </Animated.View>
+      </View>
     );
   };
 
@@ -508,7 +499,6 @@ export const QuizRoadmap: React.FC<QuizRoadmapProps> = ({
         onQuizPress={onQuizPress}
         visibleQuizzes={visibleQuizzes}
         addVisibleQuiz={addVisibleQuiz}
-        getQuizAnimation={getQuizAnimation}
       />
     );
   };
@@ -519,7 +509,7 @@ export const QuizRoadmap: React.FC<QuizRoadmapProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Роадмап */}
+      {/* Roadmap */}
       <ScrollView
         style={styles.roadmapWrapper}
         contentContainerStyle={styles.roadmapContent}
@@ -529,9 +519,8 @@ export const QuizRoadmap: React.FC<QuizRoadmapProps> = ({
         scrollEventThrottle={16}
         ref={scrollViewRef}
       >
-        {/* Кнопка начала обучения */}
-        <Animated.View 
-          entering={FadeInUp.delay(100).duration(600)}
+        {/* Start learning button */}
+        <View 
           style={styles.startButtonContainer}
         >
           <TouchableOpacity 
@@ -551,7 +540,7 @@ export const QuizRoadmap: React.FC<QuizRoadmapProps> = ({
             >
               <Ionicons name="play" size={24} color="white" />
               
-              {/* Shiny текст с градиентом */}
+              {/* Shiny text with gradient */}
               <View style={styles.shinyTextContainer}>
                 <Text style={styles.startButtonText}>
                   Începe învățarea
@@ -569,9 +558,9 @@ export const QuizRoadmap: React.FC<QuizRoadmapProps> = ({
               <Ionicons name="arrow-forward" size={20} color="white" />
             </LinearGradient>
           </TouchableOpacity>
-        </Animated.View>
+        </View>
 
-        {/* Квизы */}
+        {/* Quizzes */}
         {quizzes.map((quiz, index) => (
           <View key={quiz.id}>
             {renderQuizNode(quiz, index)}
@@ -589,7 +578,7 @@ const styles = StyleSheet.create({
   },
   
   roadmapWrapper: {
-    paddingHorizontal: spacing.xxxl, // Увеличиваем отступы от краев
+    paddingHorizontal: spacing.xxxl, // Increase edge margins
     paddingVertical: spacing.xl,
     overflow: 'hidden',
   },
@@ -626,9 +615,9 @@ const styles = StyleSheet.create({
   },
   
   nodeContainer: {
-    marginBottom: spacing.sm, // Уменьшаем отступ с lg до sm
-    paddingHorizontal: spacing.lg, // Увеличиваем с md до lg
-    marginHorizontal: spacing.lg, // Увеличиваем с md до lg для большего отступа от краев
+    marginBottom: spacing.sm, // Reduce margin from lg to sm
+    paddingHorizontal: spacing.lg, // Increase from md to lg
+    marginHorizontal: spacing.lg, // Increase from md to lg for bigger edge margin
     position: 'relative',
   },
   
@@ -644,14 +633,13 @@ const styles = StyleSheet.create({
   
   nodeCard: {
     borderRadius: borderRadius.xl,
-    // Убираем borderWidth: 3 - черную обводку
     overflow: 'hidden',
     shadowColor: colors.ai.primary,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 12,
-    flexShrink: 1, // Позволяет карточке сжиматься при необходимости
+    flexShrink: 1, // Allows card to shrink if needed
   },
   
   lockedCard: {
@@ -662,7 +650,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     ...shadows.medium,
-    // Убираем обводку полностью
   },
   
   completedBadge: {
@@ -707,15 +694,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
-    // Убираем обводку
-    // borderWidth: 3,
-    // borderColor: colors.ai.glassBorder,
   },
   
   currentIconContainer: {
     backgroundColor: colors.ai.glass + '4D', // 30% opacity
-    // Убираем обводку
-    // borderColor: colors.ai.glassBorder + '80', // 50% opacity
     transform: [{ scale: 1.1 }],
   },
   
@@ -794,7 +776,7 @@ const styles = StyleSheet.create({
   pathContainer: {
     width: width,
     alignItems: 'center',
-    marginBottom: spacing.xs, // Уменьшаем отступ с md до xs
+    marginBottom: spacing.xs, // Reduce margin from md to xs
   },
   
   svgPath: {

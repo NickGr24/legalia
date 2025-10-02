@@ -92,14 +92,14 @@ export async function getUserPointsFromQuizzes(userId: string): Promise<{
       // Fixed 15 XP per successfully completed quiz (≥70%)
       let points = 0;
       
-      if (result.completed) {
+      if ((result as any).completed) {
         points = 15; // Fixed 15 XP for successful completion
       }
 
       totalPoints += points;
 
       // Check if this quiz was completed this week
-      const completedAt = new Date(result.completed_at || result.updated_at);
+      const completedAt = new Date((result as any).completed_at || (result as any).updated_at);
       
       if (completedAt >= currentWeekStart) {
         weeklyPoints += points;
@@ -156,7 +156,7 @@ export async function recordQuizCompletion(
         completed: completed,
         completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      });
+      } as any);
 
     if (error) {
       console.error('Error recording quiz completion:', error);
@@ -239,13 +239,13 @@ export async function getUniversitiesAllTime(limit: number = 1000): Promise<Univ
     // Also filter out "Alta Universitate" client-side as backup
     const sanitizedData = (data || [])
       .filter(university => 
-        university.university_name && 
-        !university.university_name.toLowerCase().includes('altă universitate')
+        (university as any).university_name && 
+        !(university as any).university_name.toLowerCase().includes('altă universitate')
       )
       .map(university => ({
-        ...university,
-        total_xp: university.total_xp || 0,
-        students_count: university.students_count || 0,
+        ...(university as any),
+        total_xp: (university as any).total_xp || 0,
+        students_count: (university as any).students_count || 0,
       }));
 
     return sanitizedData;
@@ -275,13 +275,13 @@ export async function getUniversitiesThisWeek(limit: number = 1000): Promise<Uni
     // Also filter out "Alta Universitate" client-side as backup
     const sanitizedData = (data || [])
       .filter(university => 
-        university.university_name && 
-        !university.university_name.toLowerCase().includes('altă universitate')
+        (university as any).university_name && 
+        !(university as any).university_name.toLowerCase().includes('altă universitate')
       )
       .map(university => ({
-        ...university,
-        total_xp: university.total_xp || 0,
-        students_count: university.students_count || 0,
+        ...(university as any),
+        total_xp: (university as any).total_xp || 0,
+        students_count: (university as any).students_count || 0,
       }));
 
     return sanitizedData;

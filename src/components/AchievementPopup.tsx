@@ -1,21 +1,15 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Modal,
   TouchableOpacity,
-  Dimensions
+  Dimensions,
+  Animated
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, {
-  FadeIn,
-  FadeOut,
-  SlideInDown,
-  SlideOutUp,
-  BounceIn
-} from 'react-native-reanimated';
 
 import { colors } from '../utils/colors';
 import { spacing, borderRadius, fontSize, fontWeight, shadows, fontConfig } from '../utils/styles';
@@ -40,18 +34,18 @@ const getRarityColor = (rarity: string) => {
   }
 };
 
-const getRarityGradient = (rarity: string): readonly [string, string] => {
+const getRarityGradient = (rarity: string): [string, string] => {
   switch (rarity) {
     case 'common': 
-      return [colors.status.success + '20', colors.status.success + '10'] as const;
+      return [colors.status.success + '20', colors.status.success + '10'];
     case 'rare': 
-      return [colors.status.info + '20', colors.status.info + '10'] as const;
+      return [colors.status.info + '20', colors.status.info + '10'];
     case 'epic': 
-      return [colors.ai.accent + '20', colors.ai.accent + '10'] as const;
+      return [colors.ai.accent + '20', colors.ai.accent + '10'];
     case 'legendary': 
-      return [colors.gold + '20', colors.gold + '10'] as const;
+      return [colors.gold + '20', colors.gold + '10'];
     default: 
-      return [colors.status.success + '20', colors.status.success + '10'] as const;
+      return [colors.status.success + '20', colors.status.success + '10'];
   }
 };
 
@@ -60,6 +54,39 @@ export const AchievementPopup: React.FC<AchievementPopupProps> = ({
   achievement,
   onClose
 }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          delay: 150,
+          useNativeDriver: true,
+        })
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 50,
+          duration: 200,
+          useNativeDriver: true,
+        })
+      ]).start();
+    }
+  }, [visible, fadeAnim, slideAnim]);
+
   if (!achievement) return null;
 
   const rarityColor = getRarityColor(achievement.rarity);
@@ -73,9 +100,12 @@ export const AchievementPopup: React.FC<AchievementPopupProps> = ({
       onRequestClose={onClose}
     >
       <Animated.View
-        entering={FadeIn.duration(300)}
-        exiting={FadeOut.duration(200)}
-        style={styles.overlay}
+        style={[
+          styles.overlay,
+          {
+            opacity: fadeAnim,
+          }
+        ]}
       >
         <TouchableOpacity
           style={styles.overlayTouchable}
@@ -84,9 +114,12 @@ export const AchievementPopup: React.FC<AchievementPopupProps> = ({
         />
         
         <Animated.View
-          entering={SlideInDown.delay(150).springify()}
-          exiting={SlideOutUp.duration(200)}
-          style={styles.popup}
+          style={[
+            styles.popup,
+            {
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
         >
           <LinearGradient
             colors={rarityGradient}
@@ -110,7 +143,6 @@ export const AchievementPopup: React.FC<AchievementPopupProps> = ({
 
             {/* Achievement icon with bounce animation */}
             <Animated.View
-              entering={BounceIn.delay(300).duration(800)}
               style={styles.iconContainer}
             >
               <View style={[styles.iconBackground, { borderColor: rarityColor }]}>

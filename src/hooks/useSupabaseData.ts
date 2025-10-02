@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabaseService } from '@/services/supabaseService'
+import { supabaseService } from '../services/supabaseService'
 import {
   Discipline,
   Quiz,
@@ -9,7 +9,7 @@ import {
   UserProgress,
   UserStats,
   QuizResult,
-} from '@/utils/supabaseTypes'
+} from '../utils/supabaseTypes'
 
 // Hook for fetching all disciplines
 export function useDisciplines() {

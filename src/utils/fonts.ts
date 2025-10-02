@@ -1,47 +1,16 @@
-import { Oswald_300Light, Oswald_400Regular, Oswald_500Medium, Oswald_600SemiBold, Oswald_700Bold } from '@expo-google-fonts/oswald';
-
-// Modern font configuration for Legalia
+// Simplified font configuration using system fonts for stability
 export const fontFamilies = {
-  // Oswald is the primary font family - modern, clean, and professional
-  primary: 'Oswald', // Will fallback to system fonts if not loaded
-  
-  // Oswald for headings - consistent and strong
-  heading: 'Oswald',
-  
-  // System fallbacks for reliability
+  // Use system fonts for maximum compatibility
+  primary: 'System',
+  heading: 'System',
   systemPrimary: 'System',
   systemSecondary: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
 };
 
 export const fontConfig = {
-  // Use Oswald for body text and most UI elements
-  body: fontFamilies.primary,
-  
-  // Use Oswald for headings and important elements
-  heading: fontFamilies.heading,
-  
-  // Fallback to system fonts
+  body: fontFamilies.systemPrimary,
+  heading: fontFamilies.systemPrimary,
   system: fontFamilies.systemPrimary,
-};
-
-// Font loading configuration
-export const fontAssets = {
-  oswald: {
-    '300': Oswald_300Light,
-    '400': Oswald_400Regular,
-    '500': Oswald_500Medium,
-    '600': Oswald_600SemiBold,
-    '700': Oswald_700Bold,
-  },
-};
-
-// Web font configuration (for web platform)
-export const webFonts = {
-  oswald: {
-    weights: ['300', '400', '500', '600', '700'],
-    display: 'swap',
-    url: 'https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap',
-  },
 };
 
 // Romanian language specific optimizations
@@ -53,26 +22,26 @@ export const languageSupport = {
   },
 };
 
-// Font styles used by components
+// Font styles used by components - all using system fonts
 export const fonts = {
   light: {
-    fontFamily: fontFamilies.primary,
+    fontFamily: fontFamilies.systemPrimary,
     fontWeight: '300' as const,
   },
   regular: {
-    fontFamily: fontFamilies.primary,
+    fontFamily: fontFamilies.systemPrimary,
     fontWeight: '400' as const,
   },
   medium: {
-    fontFamily: fontFamilies.primary,
+    fontFamily: fontFamilies.systemPrimary,
     fontWeight: '500' as const,
   },
   semiBold: {
-    fontFamily: fontFamilies.primary,
+    fontFamily: fontFamilies.systemPrimary,
     fontWeight: '600' as const,
   },
   bold: {
-    fontFamily: fontFamilies.primary,
+    fontFamily: fontFamilies.systemPrimary,
     fontWeight: '700' as const,
   },
 }; 

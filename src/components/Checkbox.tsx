@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
-import { spacing, borderRadius, fontSize, shadows, commonStyles } from '@/utils/styles';
-import { colors } from '@/utils/colors';
+import { spacing, borderRadius, fontSize, shadows, commonStyles } from '../utils/styles';
+import { colors } from '../utils/colors';
 
 interface CheckboxProps {
   checked: boolean;

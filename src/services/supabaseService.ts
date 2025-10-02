@@ -14,7 +14,7 @@ import {
   QuizForTaking,
   QuizResult,
   UserStats,
-} from '@/utils/supabaseTypes'
+} from '../utils/supabaseTypes'
 
 class SupabaseService {
   // ==========================================
@@ -100,10 +100,10 @@ class SupabaseService {
 
     // Transform to QuizForTaking format (with correct answers for instant feedback)
     return {
-      id: quiz.id,
-      title: quiz.title,
-      discipline: quiz.discipline,
-      questions: quiz.questions.map((q: any) => ({
+      id: (quiz as any).id,
+      title: (quiz as any).title,
+      discipline: (quiz as any).discipline,
+      questions: (quiz as any).questions.map((q: any) => ({
         id: q.id,
         content: q.content,
         answers: q.answers.map((a: any) => ({
@@ -233,7 +233,7 @@ class SupabaseService {
         completed: finalCompleted,
         completed_at: finalCompleted ? (existingAttempt?.completed_at || new Date().toISOString()) : null,
         updated_at: new Date().toISOString(),
-      })
+      } as any)
       .select()
       .single()
 
@@ -245,7 +245,7 @@ class SupabaseService {
     }
 
     return {
-      ...data,
+      ...(data as any),
       correct_answers: correctAnswers,
       total_questions: totalQuestions,
       percentage,
@@ -295,7 +295,7 @@ class SupabaseService {
         timezone,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      })
+      } as any)
       .select()
       .single()
 
@@ -319,7 +319,7 @@ class SupabaseService {
   async updateUserProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
     const user = await this.requireAuth()
     
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('home_userprofile')
       .update({
         ...updates,
@@ -368,7 +368,7 @@ class SupabaseService {
           last_active_date: today,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .select()
         .single()
 
@@ -396,7 +396,7 @@ class SupabaseService {
       newCurrentStreak = 1
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('home_userstreak')
       .update({
         current_streak: newCurrentStreak,

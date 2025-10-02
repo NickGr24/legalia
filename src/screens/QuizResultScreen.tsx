@@ -1,21 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import Animated, { 
-  FadeInDown, 
-  FadeInUp, 
-  ZoomIn,
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
-  interpolate,
-  Extrapolate,
-  runOnJS
-} from 'react-native-reanimated';
 
 import { colors } from '../utils/colors';
 import { spacing, borderRadius, fontSize, fontWeight, shadows, fontConfig } from '../utils/styles';
@@ -37,26 +25,15 @@ interface CircularProgressProps {
 }
 
 const CircularProgress: React.FC<CircularProgressProps> = ({ percentage, size, strokeWidth, color }) => {
-  const animatedValue = useSharedValue(0);
+  const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    animatedValue.value = withTiming(percentage, {
+    Animated.timing(animatedValue, {
+      toValue: percentage,
       duration: 1500,
-    });
-  }, [percentage]);
-
-  const progressAnimatedStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(
-      animatedValue.value,
-      [0, 100],
-      [0.3, 1],
-      Extrapolate.CLAMP
-    );
-
-    return {
-      opacity,
-    };
-  });
+      useNativeDriver: false,
+    }).start();
+  }, [percentage, animatedValue]);
 
   return (
     <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
@@ -82,7 +59,13 @@ const CircularProgress: React.FC<CircularProgressProps> = ({ percentage, size, s
             borderWidth: strokeWidth / 2,
             borderColor: color,
           },
-          progressAnimatedStyle
+          {
+            opacity: animatedValue.interpolate({
+              inputRange: [0, 100],
+              outputRange: [0.3, 1],
+              extrapolate: 'clamp',
+            })
+          }
         ]}
       />
     </View>
@@ -98,37 +81,38 @@ export const QuizResultScreen = () => {
   const [achievementUnlocks, setAchievementUnlocks] = useState<AchievementUnlock[]>([]);
   const [currentAchievementIndex, setCurrentAchievementIndex] = useState(0);
   const [showAchievementPopup, setShowAchievementPopup] = useState(false);
-  const scoreAnimation = useSharedValue(0);
-  const celebrationScale = useSharedValue(1);
+  const scoreAnimation = useRef(new Animated.Value(0)).current;
+  const celebrationScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     // Animate score counting
-    scoreAnimation.value = withTiming(score, {
+    Animated.timing(scoreAnimation, {
+      toValue: score,
       duration: 2000,
-    }, (finished) => {
-      if (finished) {
-        runOnJS(setAnimatedScore)(score);
-      }
+      useNativeDriver: false,
+    }).start(() => {
+      setAnimatedScore(score);
     });
 
     // Celebration animation for high scores
     if (score >= 80) {
       setTimeout(() => {
-        celebrationScale.value = withSpring(1.2, {
-          damping: 10,
-          stiffness: 100,
-        }, () => {
-          celebrationScale.value = withSpring(1, {
-            damping: 15,
-            stiffness: 100,
-          });
-        });
+        Animated.sequence([
+          Animated.spring(celebrationScale, {
+            toValue: 1.2,
+            useNativeDriver: true,
+          }),
+          Animated.spring(celebrationScale, {
+            toValue: 1,
+            useNativeDriver: true,
+          })
+        ]).start();
       }, 1000);
     }
 
     // Check for achievement unlocks
     checkAchievements();
-  }, [score]);
+  }, [score, scoreAnimation, celebrationScale]);
 
   const checkAchievements = async () => {
     try {

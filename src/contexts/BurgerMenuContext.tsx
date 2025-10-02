@@ -1,10 +1,9 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { BackHandler, Platform } from 'react-native';
-import { useSharedValue, withSpring, SharedValue } from 'react-native-reanimated';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
+import { BackHandler, Platform, Animated } from 'react-native';
 
 interface BurgerMenuContextValue {
   isOpen: boolean;
-  progress: SharedValue<number>;
+  progress: Animated.Value;
   open: () => void;
   close: () => void;
   toggle: () => void;
@@ -16,23 +15,24 @@ interface BurgerMenuProviderProps {
   children: ReactNode;
 }
 
-const springConfig = {
-  damping: 18,
-  stiffness: 180,
-};
-
 export const BurgerMenuProvider: React.FC<BurgerMenuProviderProps> = ({ children }) => {
-  const progress = useSharedValue(0);
+  const progress = useRef(new Animated.Value(0)).current;
   const [isOpen, setIsOpen] = useState(false);
   
   // Update open state when functions are called instead of reading shared value
   const open = () => {
-    progress.value = withSpring(1, springConfig);
+    Animated.spring(progress, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
     setIsOpen(true);
   };
 
   const close = () => {
-    progress.value = withSpring(0, springConfig);
+    Animated.spring(progress, {
+      toValue: 0,
+      useNativeDriver: true,
+    }).start();
     setIsOpen(false);
   };
 

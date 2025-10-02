@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
-import { spacing, borderRadius } from '@/utils/styles';
-import { colors } from '@/utils/colors';
+import { spacing, borderRadius } from '../utils/styles';
+import { colors } from '../utils/colors';
 
 interface PaginationDotsProps {
   total: number;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { spacing, borderRadius } from '@/utils/styles';
-import { colors } from '@/utils/colors';
+import { spacing, borderRadius } from '../utils/styles';
+import { colors } from '../utils/colors';
 
 interface SlideProps {
   title: string;

@@ -5,7 +5,7 @@ export const colors = {
     dark: '#012A33',        // Darker teal
     gradient: ['#02343F', '#0A4A58'] as const
   },
-  
+
   secondary: {
     main: '#F5F5DC',        // Ivory Cream
     light: '#FEFEF0',       // Lighter cream

@@ -1,15 +1,6 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
-  interpolate,
-  Extrapolation
-  
-} from 'react-native-reanimated';
 import { colors } from '../utils/colors';
 import { spacing, borderRadius, fontSize, fontWeight, shadows, fontConfig } from '../utils/styles';
 
@@ -38,72 +29,55 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
   gradientColors,
   style,
 }) => {
-  const animatedProgress = useSharedValue(0);
-  const shimmerPosition = useSharedValue(-1);
-  const scaleY = useSharedValue(0.8);
+  const animatedProgress = useRef(new Animated.Value(0)).current;
+  const shimmerPosition = useRef(new Animated.Value(-1)).current;
+  const scaleY = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
     if (animated) {
       // Animate progress bar fill
-      animatedProgress.value = withTiming(progress, {
+      Animated.timing(animatedProgress, {
+        toValue: progress,
         duration,
-      });
+        useNativeDriver: false,
+      }).start();
 
       // Scale animation for entrance
-      scaleY.value = withSpring(1, {
-        damping: 15,
-        stiffness: 150,
-      });
+      Animated.spring(scaleY, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
 
       // Shimmer effect when progress increases
       if (progress > 0) {
-        shimmerPosition.value = withTiming(1, {
+        Animated.timing(shimmerPosition, {
+          toValue: 1,
           duration: 800,
-        });
+          useNativeDriver: true,
+        }).start();
       }
     } else {
-      animatedProgress.value = progress;
-      scaleY.value = 1;
+      animatedProgress.setValue(progress);
+      scaleY.setValue(1);
     }
-  }, [progress, animated, duration]);
+  }, [progress, animated, duration, animatedProgress, scaleY, shimmerPosition]);
 
-  const progressBarStyle = useAnimatedStyle(() => {
-    const width = interpolate(
-      animatedProgress.value,
-      [0, 100],
-      [0, 100],
-      Extrapolation.CLAMP
-    );
-
-    return {
-      width: `${width}%`,
-      transform: [{ scaleY: scaleY.value }],
-    };
+  const progressBarWidth = animatedProgress.interpolate({
+    inputRange: [0, 100],
+    outputRange: [0, 100],
+    extrapolate: 'clamp',
   });
 
-  const shimmerStyle = useAnimatedStyle(() => {
-    const translateX = interpolate(
-      shimmerPosition.value,
-      [-1, 1],
-      [-100, 300],
-      Extrapolation.CLAMP
-    );
-
-    return {
-      transform: [{ translateX }],
-      opacity: interpolate(
-        shimmerPosition.value,
-        [-1, 0, 1],
-        [0, 0.6, 0],
-        Extrapolation.CLAMP
-      ),
-    };
+  const shimmerTranslateX = shimmerPosition.interpolate({
+    inputRange: [-1, 1],
+    outputRange: [-100, 300],
+    extrapolate: 'clamp',
   });
 
-  const containerStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scaleY: scaleY.value }],
-    };
+  const shimmerOpacity = shimmerPosition.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: [0, 0.6, 0],
+    extrapolate: 'clamp',
   });
 
   const renderProgressFill = () => {
@@ -116,7 +90,15 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
           style={[styles.progressFill, { height }]}
         >
           {/* Shimmer effect */}
-          <Animated.View style={[styles.shimmer, shimmerStyle]} />
+          <Animated.View 
+            style={[
+              styles.shimmer, 
+              {
+                transform: [{ translateX: shimmerTranslateX }],
+                opacity: shimmerOpacity,
+              }
+            ]} 
+          />
         </LinearGradient>
       );
     }
@@ -124,7 +106,15 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
     return (
       <View style={[styles.progressFill, { backgroundColor: color, height }]}>
         {/* Shimmer effect */}
-        <Animated.View style={[styles.shimmer, shimmerStyle]} />
+        <Animated.View 
+          style={[
+            styles.shimmer, 
+            {
+              transform: [{ translateX: shimmerTranslateX }],
+              opacity: shimmerOpacity,
+            }
+          ]} 
+        />
       </View>
     );
   };
@@ -145,15 +135,26 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
       <Animated.View
         style={[
           styles.track,
-          containerStyle,
-          { backgroundColor, height, borderRadius: height / 2 }
+          {
+            backgroundColor, 
+            height, 
+            borderRadius: height / 2,
+            transform: [{ scaleY: scaleY }],
+          }
         ]}
       >
         <Animated.View
           style={[
             styles.progressContainer,
-            progressBarStyle,
-            { borderRadius: height / 2 }
+            {
+              width: progressBarWidth.interpolate({
+                inputRange: [0, 100],
+                outputRange: ['0%', '100%'],
+                extrapolate: 'clamp',
+              }),
+              transform: [{ scaleY: scaleY }],
+              borderRadius: height / 2,
+            }
           ]}
         >
           {renderProgressFill()}
@@ -164,8 +165,13 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
           <Animated.View
             style={[
               styles.glow,
-              progressBarStyle,
               {
+                width: progressBarWidth.interpolate({
+                  inputRange: [0, 100],
+                  outputRange: ['0%', '100%'],
+                  extrapolate: 'clamp',
+                }),
+                transform: [{ scaleY: scaleY }],
                 backgroundColor: `${color}30`,
                 height: height + 4,
                 borderRadius: (height + 4) / 2,

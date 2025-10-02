@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl, Platform, Image } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, Platform, Image, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect, RouteProp } from '@react-navigation/native';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { colors } from '../utils/colors';
 import { spacing, borderRadius, fontSize, fontWeight, shadows, fontConfig } from '../utils/styles';
@@ -59,6 +58,12 @@ export const HomeScreen = () => {
   const { handleApiError } = useErrorHandler();
   const [refreshing, setRefreshing] = useState(false);
   
+  // Animation values
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const statsAnim = useRef(new Animated.Value(0)).current;
+  const contentAnim = useRef(new Animated.Value(0)).current;
+  const disciplineAnims = useRef<Animated.Value[]>([]).current;
+  
   // Use the new Supabase hooks
   const { disciplines, loading, error, refetch: refetchDisciplines } = useDisciplinesWithQuizzes();
   const { connected, testConnection } = useSupabaseConnection();
@@ -79,10 +84,55 @@ export const HomeScreen = () => {
   
   const { greeting, icon, iconColor } = getTimeBasedGreeting();
 
+  // Start entrance animations
   useEffect(() => {
     // Test Supabase connection on mount
     testConnection();
-  }, [testConnection]);
+    
+    // Start entrance animations
+    const animations = [
+      Animated.timing(headerAnim, {
+        toValue: 1,
+        duration: 600,
+        delay: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(statsAnim, {
+        toValue: 1,
+        duration: 600,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentAnim, {
+        toValue: 1,
+        duration: 600,
+        delay: 300,
+        useNativeDriver: true,
+      }),
+    ];
+    
+    Animated.stagger(100, animations).start();
+  }, [testConnection, headerAnim, statsAnim, contentAnim]);
+
+  // Update discipline animations when disciplines change
+  useEffect(() => {
+    // Initialize discipline animations
+    while (disciplineAnims.length < disciplines.length) {
+      disciplineAnims.push(new Animated.Value(0));
+    }
+    
+    // Start discipline animations
+    const disciplineAnimations = disciplines.map((_, index) => 
+      Animated.timing(disciplineAnims[index] || new Animated.Value(0), {
+        toValue: 1,
+        duration: 600,
+        delay: 400 + index * 100,
+        useNativeDriver: true,
+      })
+    );
+    
+    Animated.stagger(100, disciplineAnimations).start();
+  }, [disciplines, disciplineAnims]);
 
   // Listen for refresh parameter and refresh data
   useFocusEffect(
@@ -187,27 +237,40 @@ export const HomeScreen = () => {
           end={{ x: 1, y: 1 }}
         >
           {/* Header */}
-          <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
-            <View style={styles.headerTop}>
-              <Image 
-                source={require('../../assets/icon.png')} 
-                style={styles.headerLogo}
-                resizeMode="contain"
-              />
-              <View style={styles.greetingContainer}>
-                <Text style={styles.greetingText}>{greeting}</Text>
-              </View>
+          <Animated.View 
+            style={[
+              styles.header,
+              {
+                opacity: headerAnim,
+                transform: [{
+                  translateY: headerAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-20, 0],
+                  })
+                }]
+              }
+            ]}
+          >
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greetingText}>{greeting}</Text>
             </View>
-            
-            {user && (
-              <Text style={styles.welcomeText}>
-                Bine ai venit, {user.user_metadata?.full_name || 'Student'}!
-              </Text>
-            )}
           </Animated.View>
 
           {/* Stats Cards */}
-          <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.statsContainer}>
+          <Animated.View 
+            style={[
+              styles.statsContainer,
+              {
+                opacity: statsAnim,
+                transform: [{
+                  translateY: statsAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-20, 0],
+                  })
+                }]
+              }
+            ]}
+          >
             <View style={styles.statsGrid}>
               <View style={styles.statCard}>
                 <Ionicons name="school" size={24} color={colors.gold} />
@@ -244,7 +307,17 @@ export const HomeScreen = () => {
           </Animated.View>
 
           {/* Content Section */}
-          <Animated.View entering={FadeInDown.delay(300).duration(600)}>
+          <Animated.View 
+            style={{
+              opacity: contentAnim,
+              transform: [{
+                translateY: contentAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                })
+              }]
+            }}
+          >
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Alege o disciplină</Text>
               <Text style={styles.sectionSubtitle}>
@@ -259,8 +332,18 @@ export const HomeScreen = () => {
                 return (
                   <Animated.View
                     key={`${discipline.id}-${completedCount}`} // Key includes completedCount to force re-render
-                    entering={FadeInDown.delay(400 + index * 100).duration(600)}
-                    style={styles.courseCardWrapper}
+                    style={[
+                      styles.courseCardWrapper,
+                      {
+                        opacity: disciplineAnims[index] || 0,
+                        transform: [{
+                          translateY: (disciplineAnims[index] || new Animated.Value(0)).interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20, 0],
+                          })
+                        }]
+                      }
+                    ]}
                   >
                     <DisciplineCard
                       id={discipline.id}
@@ -305,14 +388,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     backgroundColor: 'transparent',
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   mainGradient: {
     flex: 1,
     paddingBottom: spacing.xl,
-  },
-  header: {
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
   },
   headerTop: {
     flexDirection: 'row',

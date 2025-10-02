@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { getUniversityLogo } from '@/utils/universityLogos';
+import { getUniversityLogo } from '../utils/universityLogos';
 
 export interface SetUserUniversityParams {
   userId: string;
@@ -29,9 +29,10 @@ export class ProfileService {
       .upsert(
         {
           user_id: userId,
+          timezone: 'UTC',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        },
+        } as any,
         {
           onConflict: 'user_id',
           ignoreDuplicates: true,
@@ -68,7 +69,7 @@ export class ProfileService {
       p_workplace: params.workplace || null,
       p_logo_path: logoPath,
       p_logo_url: params.logoUrl || null,
-    });
+    } as any);
 
     if (error) {
       console.error('Error setting user university:', error);
@@ -84,7 +85,7 @@ export class ProfileService {
       p_user_id: userId,
       p_delta: 100,
       p_reason: 'signup_bonus',
-    });
+    } as any);
 
     if (error) {
       console.error('Error awarding signup bonus:', error);

@@ -1,14 +1,7 @@
-import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring, 
-  withTiming,
-  withDelay
-} from 'react-native-reanimated';
 
 import { colors } from '../utils/colors';
 import { spacing, borderRadius, fontSize, fontWeight, shadows, fontConfig } from '../utils/styles';
@@ -37,61 +30,54 @@ export const DisciplineCard: React.FC<DisciplineCardProps> = ({
   isNew = false,
   isUnlocked = false
 }) => {
-  const scale = useSharedValue(1);
-  const opacity = useSharedValue(0);
-  const translateX = useSharedValue(index % 2 === 0 ? -100 : 100); // Alternate left/right
-  const badgeScale = useSharedValue(0);
+  const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateX = useRef(new Animated.Value(index % 2 === 0 ? -100 : 100)).current; // Alternate left/right
+  const badgeScale = useRef(new Animated.Value(0)).current;
   
   // Entrance animation with alternating direction
   useEffect(() => {
     const delay = index * 200; // Increased delay for smoother stagger
     
     // Fade in with slide from alternating sides
-    opacity.value = withDelay(delay, withTiming(1, {
+    Animated.timing(opacity, {
+      toValue: 1,
       duration: 800,
-    }));
+      delay,
+      useNativeDriver: true,
+    }).start();
     
-    translateX.value = withDelay(delay, withSpring(0, {
-      damping: 20,
-      stiffness: 100,
-    }));
+    Animated.spring(translateX, {
+      toValue: 0,
+      delay,
+      useNativeDriver: true,
+    }).start();
     
     // Badge animation if new/unlocked
     if (isNew || isUnlocked) {
-      badgeScale.value = withDelay(delay + 400, withSpring(1, {
-        damping: 10,
-        stiffness: 150,
-      }));
+      Animated.spring(badgeScale, {
+        toValue: 1,
+        delay: delay + 400,
+        useNativeDriver: true,
+      }).start();
     }
-  }, [index, isNew, isUnlocked]);
+  }, [index, isNew, isUnlocked, opacity, translateX, badgeScale]);
   
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { scale: scale.value },
-        { translateX: translateX.value }
-      ],
-      opacity: opacity.value,
-    };
-  });
-
-
-
-  const badgeAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: badgeScale.value }],
-      opacity: badgeScale.value,
-    };
-  });
 
   const handlePressIn = () => {
     // Subtle scale animation without flickering
-    scale.value = withSpring(0.98, { damping: 25, stiffness: 300 });
+    Animated.spring(scale, {
+      toValue: 0.98,
+      useNativeDriver: true,
+    }).start();
   };
 
   const handlePressOut = () => {
     // Return to normal scale
-    scale.value = withSpring(1, { damping: 25, stiffness: 300 });
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
   };
 
   const handlePress = () => {
@@ -132,7 +118,7 @@ export const DisciplineCard: React.FC<DisciplineCardProps> = ({
         iconBg: ['#1f4037', '#99f2c8'] as const,
       }
     ];
-    
+
     return themes[index % themes.length];
   };
 
@@ -146,7 +132,16 @@ export const DisciplineCard: React.FC<DisciplineCardProps> = ({
     const badgeColor = isNew ? colors.status.error : colors.ai.accent;
     
     return (
-      <Animated.View style={[styles.badge, badgeAnimatedStyle, { backgroundColor: badgeColor }]}>
+      <Animated.View 
+        style={[
+          styles.badge, 
+          {
+            backgroundColor: badgeColor,
+            transform: [{ scale: badgeScale }],
+            opacity: badgeScale,
+          }
+        ]}
+      >
         <Text style={styles.badgeText}>{badgeText}</Text>
       </Animated.View>
     );
@@ -154,7 +149,16 @@ export const DisciplineCard: React.FC<DisciplineCardProps> = ({
 
   return (
     <AnimatedTouchableOpacity
-      style={[styles.container, animatedStyle]}
+      style={[
+        styles.container, 
+        {
+          transform: [
+            { scale: scale },
+            { translateX: translateX }
+          ],
+          opacity: opacity,
+        }
+      ]}
       onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}

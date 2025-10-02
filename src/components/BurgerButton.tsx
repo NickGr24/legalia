@@ -1,13 +1,8 @@
 import React from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  interpolate,
-  withSpring,
-} from 'react-native-reanimated';
-import { useBurgerMenu } from '@/contexts/BurgerMenuContext';
-import { colors } from '@/utils/colors';
-import { t } from '@/i18n';
+import { TouchableOpacity, View, StyleSheet, Animated } from 'react-native';
+import { useBurgerMenu } from '../contexts/BurgerMenuContext';
+import { colors } from '../utils/colors';
+import { t } from '../i18n';
 
 const BUTTON_SIZE = 44;
 const LINE_WIDTH = 22;
@@ -17,38 +12,34 @@ const LINE_SPACING = 5;
 export const BurgerButton: React.FC = () => {
   const { toggle, progress, isOpen } = useBurgerMenu();
 
-  const topLineStyle = useAnimatedStyle(() => {
-    const rotate = interpolate(progress.value, [0, 1], [0, 45]);
-    const translateY = interpolate(progress.value, [0, 1], [0, 7]);
-
-    return {
-      transform: [
-        { translateY: withSpring(translateY) },
-        { rotateZ: withSpring(`${rotate}deg`) },
-      ],
-    };
+  const topLineRotate = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '45deg'],
   });
 
-  const middleLineStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(progress.value, [0, 1], [1, 0]);
-    const scaleX = interpolate(progress.value, [0, 1], [1, 0.6]);
-
-    return {
-      opacity: withSpring(opacity),
-      transform: [{ scaleX: withSpring(scaleX) }],
-    };
+  const topLineTranslateY = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 7],
   });
 
-  const bottomLineStyle = useAnimatedStyle(() => {
-    const rotate = interpolate(progress.value, [0, 1], [0, -45]);
-    const translateY = interpolate(progress.value, [0, 1], [0, -7]);
+  const middleLineOpacity = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0],
+  });
 
-    return {
-      transform: [
-        { translateY: withSpring(translateY) },
-        { rotateZ: withSpring(`${rotate}deg`) },
-      ],
-    };
+  const middleLineScaleX = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.6],
+  });
+
+  const bottomLineRotate = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '-45deg'],
+  });
+
+  const bottomLineTranslateY = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -7],
   });
 
   return (
@@ -61,9 +52,38 @@ export const BurgerButton: React.FC = () => {
       activeOpacity={0.7}
     >
       <View style={styles.container}>
-        <Animated.View style={[styles.line, topLineStyle]} />
-        <Animated.View style={[styles.line, styles.middleLine, middleLineStyle]} />
-        <Animated.View style={[styles.line, bottomLineStyle]} />
+        <Animated.View 
+          style={[
+            styles.line, 
+            {
+              transform: [
+                { translateY: topLineTranslateY },
+                { rotateZ: topLineRotate },
+              ],
+            }
+          ]} 
+        />
+        <Animated.View 
+          style={[
+            styles.line, 
+            styles.middleLine, 
+            {
+              opacity: middleLineOpacity,
+              transform: [{ scaleX: middleLineScaleX }],
+            }
+          ]} 
+        />
+        <Animated.View 
+          style={[
+            styles.line, 
+            {
+              transform: [
+                { translateY: bottomLineTranslateY },
+                { rotateZ: bottomLineRotate },
+              ],
+            }
+          ]} 
+        />
       </View>
     </TouchableOpacity>
   );
