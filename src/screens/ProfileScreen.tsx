@@ -81,19 +81,47 @@ export const ProfileScreen: React.FC = () => {
   }, [headerAnim, statsAnim, achievementsAnim, settingsAnim, accountAnim]);
 
   const loadUserData = async () => {
-    if (!user) return;
-    
+    if (!user) {
+      console.log('No user found, setting default stats');
+      // Set default stats if no user
+      setUserStats({
+        profile: {
+          id: 0,
+          timezone: 'UTC',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          user_id: '',
+        },
+        streak: {
+          id: 0,
+          current_streak: 0,
+          longest_streak: 0,
+          last_active_date: new Date().toISOString().split('T')[0],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          user_id: '',
+        },
+        totalQuizzes: 0,
+        completedQuizzes: 0,
+        averageScore: 0,
+        totalQuestions: 0,
+        correctAnswers: 0,
+      });
+      return;
+    }
+
     try {
       setLoading(true);
-      
+
       // Load user statistics from Supabase
       const stats = await supabaseService.getUserStats();
+      console.log('Loaded user stats:', stats);
       setUserStats(stats);
-      
+
     } catch (error) {
       console.error('Failed to load profile data:', error);
       handleApiError(error, 'Failed to load profile data');
-      
+
       // Fallback to default stats if API fails
       setUserStats({
         profile: {
@@ -154,17 +182,34 @@ export const ProfileScreen: React.FC = () => {
     setSelectedAchievement(null);
   };
 
-  if (loading) {
+  if (loading && !userStats) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         {/* Header with Burger Button */}
         <View style={styles.headerBar}>
           <BurgerButton />
         </View>
-        
+
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary.main} />
           <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!userStats) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.headerBar}>
+          <BurgerButton />
+        </View>
+
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>Failed to load profile data</Text>
+          <TouchableOpacity onPress={loadUserData} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -240,46 +285,46 @@ export const ProfileScreen: React.FC = () => {
           
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Ionicons name="flame" size={32} color={colors.status.warning} />
+              <Ionicons name="flame" size={24} color={colors.status.warning} />
               <Text style={styles.statValue}>{userStats?.streak?.current_streak || 0}</Text>
-              <Text style={styles.statLabel}>Zile consecutive</Text>
+              <Text style={styles.statLabel}>Zile{'\n'}consecutive</Text>
             </View>
-            
+
             <View style={styles.statCard}>
-              <Ionicons name="trophy" size={32} color={colors.gold} />
+              <Ionicons name="trophy" size={24} color={colors.gold} />
               <Text style={styles.statValue}>{userStats?.streak?.longest_streak || 0}</Text>
-              <Text style={styles.statLabel}>Cel mai lung streak</Text>
+              <Text style={styles.statLabel}>Record{'\n'}streak</Text>
             </View>
-            
+
             <View style={styles.statCard}>
-              <Ionicons name="school" size={32} color={colors.status.success} />
+              <Ionicons name="school" size={24} color={colors.status.success} />
               <Text style={styles.statValue}>{userStats?.completedQuizzes || 0}</Text>
-              <Text style={styles.statLabel}>Quiz-uri completate</Text>
+              <Text style={styles.statLabel}>Quiz-uri{'\n'}complete</Text>
             </View>
           </View>
-          
+
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Ionicons name="bar-chart" size={32} color={colors.status.info} />
+              <Ionicons name="bar-chart" size={24} color={colors.status.info} />
               <Text style={styles.statValue}>{Math.round(userStats?.averageScore || 0)}%</Text>
-              <Text style={styles.statLabel}>Scor mediu</Text>
+              <Text style={styles.statLabel}>Scor{'\n'}mediu</Text>
             </View>
-            
+
             <View style={styles.statCard}>
-              <Ionicons name="checkmark-circle" size={32} color={colors.ai.accent} />
+              <Ionicons name="checkmark-circle" size={24} color={colors.ai.accent} />
               <Text style={styles.statValue}>{userStats?.correctAnswers || 0}</Text>
-              <Text style={styles.statLabel}>Răspunsuri corecte</Text>
+              <Text style={styles.statLabel}>Răspunsuri{'\n'}corecte</Text>
             </View>
-            
+
             <View style={styles.statCard}>
-              <Ionicons name="calendar" size={32} color={colors.status.warning} />
-              <Text style={styles.statValue}>
-                {userStats?.streak?.last_active_date 
-                  ? new Date(userStats.streak.last_active_date).toLocaleDateString('ro-RO')
+              <Ionicons name="calendar" size={24} color={colors.status.warning} />
+              <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>
+                {userStats?.streak?.last_active_date
+                  ? new Date(userStats.streak.last_active_date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit' })
                   : 'N/A'
                 }
               </Text>
-              <Text style={styles.statLabel}>Ultima activitate</Text>
+              <Text style={styles.statLabel}>Ultima{'\n'}activitate</Text>
             </View>
           </View>
         </Animated.View>
@@ -442,12 +487,33 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: spacing.xl,
   },
   loadingText: {
     fontSize: fontSize.md,
     color: colors.text.secondary,
     fontFamily: fontConfig.body,
     marginTop: spacing.md,
+  },
+  errorText: {
+    fontSize: fontSize.lg,
+    color: colors.status.error,
+    fontFamily: fontConfig.body,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: colors.primary.main,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    ...shadows.medium,
+  },
+  retryButtonText: {
+    fontSize: fontSize.md,
+    color: colors.text.onPrimary,
+    fontFamily: fontConfig.heading,
+    fontWeight: fontWeight.semibold,
   },
   content: {
     flex: 1,
@@ -511,30 +577,34 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: spacing.md,
-    marginBottom: spacing.lg,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
   statCard: {
     flex: 1,
     backgroundColor: colors.background.secondary,
     borderRadius: borderRadius.lg,
-    padding: spacing.md,
+    padding: spacing.sm,
+    paddingVertical: spacing.md,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 100,
     ...shadows.small,
   },
   statValue: {
-    fontSize: fontSize.xl,
+    fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
     color: colors.text.primary,
     fontFamily: fontConfig.heading,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xxs,
   },
   statLabel: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.xs,
     color: colors.text.secondary,
     fontFamily: fontConfig.body,
     textAlign: 'center',
+    lineHeight: 14,
   },
   settingsContainer: {
     backgroundColor: colors.background.secondary,

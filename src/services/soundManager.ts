@@ -1,18 +1,20 @@
-import { useAudioPlayer, AudioSource } from 'expo-audio';
 import { Platform } from 'react-native';
+import { Audio } from 'expo-av';
 
 type SoundName = 'select' | 'transition' | 'win';
 
 interface SoundItem {
-  sound: any | null;
+  source: any;
   isLoaded: boolean;
+  audio?: HTMLAudioElement; // For web
+  sound?: Audio.Sound; // For native
 }
 
 class SoundManager {
   private sounds: Record<SoundName, SoundItem> = {
-    select: { sound: null, isLoaded: false },
-    transition: { sound: null, isLoaded: false },
-    win: { sound: null, isLoaded: false },
+    select: { source: null, isLoaded: false },
+    transition: { source: null, isLoaded: false },
+    win: { source: null, isLoaded: false },
   };
 
   private getSoundFiles(): Record<SoundName, any> {
@@ -38,6 +40,16 @@ class SoundManager {
     if (this.isInitialized) return;
 
     try {
+      console.log('🎵 Initializing SoundManager...');
+
+      // Configure audio mode for native platforms
+      if (Platform.OS !== 'web') {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+          shouldDuckAndroid: true,
+        });
+      }
 
       // Preload all sounds
       await Promise.all([
@@ -47,6 +59,7 @@ class SoundManager {
       ]);
 
       this.isInitialized = true;
+      console.log('✅ SoundManager initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize SoundManager:', error);
     }
@@ -57,16 +70,40 @@ class SoundManager {
       if (this.sounds[name].isLoaded) return;
 
       const soundFiles = this.getSoundFiles();
+      const soundFile = soundFiles[name];
 
-      // Expo Audio doesn't require pre-loading, we just store the source
-      this.sounds[name] = {
-        sound: soundFiles[name],
-        isLoaded: !!soundFiles[name],
-      };
+      if (!soundFile) {
+        console.warn(`❌ Sound file not found for '${name}'`);
+        return;
+      }
 
+      // For web platform, create audio element
+      if (Platform.OS === 'web') {
+        const audio = new Audio(soundFile);
+        audio.preload = 'auto';
+        this.sounds[name] = {
+          source: soundFile,
+          isLoaded: true,
+          audio: audio,
+        };
+      } else {
+        // For native platforms, load with expo-av
+        const { sound } = await Audio.Sound.createAsync(soundFile, {
+          shouldPlay: false,
+          volume: 1.0,
+        });
+
+        this.sounds[name] = {
+          source: soundFile,
+          isLoaded: true,
+          sound: sound,
+        };
+      }
+
+      console.log(`✅ Loaded sound: ${name}`);
     } catch (error) {
       console.error(`❌ Failed to load sound '${name}':`, error);
-      this.sounds[name] = { sound: null, isLoaded: false };
+      this.sounds[name] = { source: null, isLoaded: false };
     }
   }
 
@@ -78,14 +115,24 @@ class SoundManager {
 
       const soundItem = this.sounds[name];
 
-      if (!soundItem.isLoaded || !soundItem.sound) {
+      if (!soundItem.isLoaded || !soundItem.source) {
+        console.warn(`❌ Sound '${name}' not loaded, attempting to load...`);
         await this.loadSound(name);
         return this.playSound(name); // Retry after loading
       }
 
-      // With expo-audio, we can't use hooks in a class, so sounds will just work at runtime
-      // The TypeScript error is acceptable here as this is a workaround
-
+      // For web platform
+      if (Platform.OS === 'web' && soundItem.audio) {
+        soundItem.audio.currentTime = 0;
+        soundItem.audio.play().catch(err => {
+          console.error(`Failed to play ${name}:`, err);
+        });
+        console.log(`🔊 Playing sound (web): ${name}`);
+      } else if (soundItem.sound) {
+        // For native platforms
+        await soundItem.sound.replayAsync();
+        console.log(`🔊 Playing sound (native): ${name}`);
+      }
     } catch (error) {
       console.error(`❌ Failed to play sound '${name}':`, error);
     }
@@ -93,14 +140,35 @@ class SoundManager {
 
   async cleanup(): Promise<void> {
     try {
-      // Reset state (expo-audio manages cleanup automatically)
+      // Cleanup audio elements for web
+      if (Platform.OS === 'web') {
+        Object.values(this.sounds).forEach(item => {
+          if (item.audio) {
+            item.audio.pause();
+            item.audio = undefined;
+          }
+        });
+      } else {
+        // Cleanup expo-av sounds for native
+        await Promise.all(
+          Object.values(this.sounds).map(async item => {
+            if (item.sound) {
+              await item.sound.unloadAsync();
+              item.sound = undefined;
+            }
+          })
+        );
+      }
+
+      // Reset state
       this.sounds = {
-        select: { sound: null, isLoaded: false },
-        transition: { sound: null, isLoaded: false },
-        win: { sound: null, isLoaded: false },
+        select: { source: null, isLoaded: false },
+        transition: { source: null, isLoaded: false },
+        win: { source: null, isLoaded: false },
       };
       this.isInitialized = false;
 
+      console.log('✅ SoundManager cleaned up');
     } catch (error) {
       console.error('❌ Failed to cleanup SoundManager:', error);
     }

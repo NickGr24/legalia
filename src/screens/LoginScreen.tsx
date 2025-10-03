@@ -103,13 +103,11 @@ export const LoginScreen: React.FC = () => {
         <View style={styles.content}>
           {/* Logo/Header */}
           <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Image 
-                source={require('../../assets/legalia-logo.png')} 
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            </View>
+            <Image
+              source={require('../../assets/legalia-logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
             <Text style={styles.title}>{t('app_name')}</Text>
             <Text style={styles.subtitle}>Platformă de educație juridică</Text>
           </View>
@@ -233,29 +231,20 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: spacing.xxxl * 2,
-  },
-  logoContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.ai.glass,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-    borderWidth: 3,
-    borderColor: colors.ai.glassBorder,
+    marginBottom: spacing.lg,
   },
   logo: {
     width: 80,
     height: 80,
+    borderRadius: 20,
+    marginBottom: spacing.sm,
   },
   title: {
     fontSize: fontSize.xxxl,
     fontWeight: fontWeight.bold,
     color: colors.text.onPrimary,
     fontFamily: fontConfig.heading,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   subtitle: {
     fontSize: fontSize.md,
@@ -264,7 +253,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   form: {
-    marginBottom: spacing.xxxl,
+    marginBottom: spacing.lg,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -273,7 +262,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.ai.glassBorder,
   },

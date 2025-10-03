@@ -242,9 +242,8 @@ const styles = StyleSheet.create({
   pickerLogo: {
     width: 24,
     height: 24,
-    borderRadius: borderRadius.xs,
+    borderRadius: 8,
     marginRight: spacing.sm,
-    backgroundColor: colors.surface.primary,
   },
   pickerText: {
     ...commonStyles.bodyMD,
@@ -305,18 +304,15 @@ const styles = StyleSheet.create({
   universityLogo: {
     width: 32,
     height: 32,
-    borderRadius: borderRadius.sm,
+    borderRadius: 10,
     marginRight: spacing.md,
-    backgroundColor: colors.surface.primary,
   },
   logoPlaceholder: {
     width: 32,
     height: 32,
-    borderRadius: borderRadius.sm,
-    backgroundColor: colors.ai.glass,
+    borderRadius: 10,
+    backgroundColor: 'transparent',
     marginRight: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border.glass,
     alignItems: 'center',
     justifyContent: 'center',
   },

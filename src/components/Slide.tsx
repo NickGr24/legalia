@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { spacing, borderRadius } from '../utils/styles';
 import { colors } from '../utils/colors';
 
@@ -8,6 +9,8 @@ interface SlideProps {
   subtitle?: string;
   children?: React.ReactNode;
   hasIllustration?: boolean;
+  showLogo?: boolean;
+  iconName?: keyof typeof Ionicons.glyphMap;
 }
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -25,14 +28,18 @@ const getResponsiveFontSizes = () => {
 
 const fontSizes = getResponsiveFontSizes();
 
-export const Slide: React.FC<SlideProps> = ({ 
-  title, 
-  subtitle, 
-  children, 
-  hasIllustration = false 
+export const Slide: React.FC<SlideProps> = ({
+  title,
+  subtitle,
+  children,
+  hasIllustration = false,
+  showLogo = false,
+  iconName
 }) => {
   // Dynamic illustration size based on screen
   const illustrationSize = Math.min(Math.max(screenWidth * 0.32, 120), 160);
+  const logoSize = Math.min(Math.max(screenWidth * 0.45, 150), 200);
+  const iconSize = Math.min(Math.max(screenWidth * 0.25, 100), 140);
 
   return (
     <View style={styles.container}>
@@ -43,7 +50,7 @@ export const Slide: React.FC<SlideProps> = ({
             {title}
           </Text>
           {subtitle && (
-            <Text 
+            <Text
               style={[styles.subtitle, { fontSize: fontSizes.subtitle }]}
               accessibilityRole="text"
             >
@@ -51,9 +58,37 @@ export const Slide: React.FC<SlideProps> = ({
             </Text>
           )}
         </View>
-        
+
+        {/* Logo */}
+        {showLogo && (
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../../assets/legalia-logo.png')}
+              style={{
+                width: logoSize,
+                height: logoSize,
+                borderRadius: logoSize * 0.25,
+              }}
+              resizeMode="contain"
+            />
+          </View>
+        )}
+
+        {/* Icon */}
+        {iconName && !showLogo && (
+          <View style={styles.iconContainer}>
+            <View style={[styles.iconCircle, { width: iconSize, height: iconSize }]}>
+              <Ionicons
+                name={iconName}
+                size={iconSize * 0.55}
+                color={colors.ai.primary}
+              />
+            </View>
+          </View>
+        )}
+
         {/* Optional Illustration */}
-        {hasIllustration && (
+        {hasIllustration && !showLogo && !iconName && (
           <View style={styles.illustrationContainer}>
             <View style={[
               styles.illustration,
@@ -64,10 +99,10 @@ export const Slide: React.FC<SlideProps> = ({
             ]} />
           </View>
         )}
-        
+
         {/* Flexible Spacer */}
         <View style={styles.spacer} />
-        
+
         {/* Custom Content */}
         {children && (
           <View style={styles.childrenContainer}>
@@ -112,6 +147,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: fontSizes.subtitle * 1.4,
     paddingHorizontal: spacing.xs,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+    marginTop: spacing.lg,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+    marginTop: spacing.lg,
+  },
+  iconCircle: {
+    backgroundColor: colors.ai.glass,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: colors.ai.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   illustrationContainer: {
     alignItems: 'center',

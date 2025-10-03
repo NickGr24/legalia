@@ -9,6 +9,7 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -188,7 +189,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
     <Slide
       title={t('onboarding_slide1_title')}
       subtitle={t('onboarding_slide1_text')}
-      hasIllustration
+      showLogo
     />
   );
 
@@ -196,6 +197,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
     <Slide
       title={t('onboarding_slide2_title')}
       subtitle={t('onboarding_slide2_text')}
+      iconName="bulb"
     >
       <View style={styles.featuresContainer}>
         {[
@@ -204,10 +206,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
           t('onboarding_slide2_feature3'),
         ].map((feature, index) => (
           <View key={index} style={styles.featureItem}>
-            <Ionicons 
-              name="checkmark-circle" 
-              size={20} 
-              color={colors.ai.primary} 
+            <Ionicons
+              name="checkmark-circle"
+              size={20}
+              color={colors.ai.primary}
             />
             <AppText variant="body" style={styles.featureText}>{feature}</AppText>
           </View>
@@ -220,13 +222,18 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
     <Slide
       title={t('onboarding_slide3_title')}
       subtitle={t('onboarding_slide3_text')}
-      hasIllustration
+      iconName="trophy"
     />
   );
 
   const renderSlide4 = () => (
     <View style={styles.registrationSlide}>
       <View style={styles.registrationHeader}>
+        <Image
+          source={require('../../assets/legalia-logo.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
         <AppText variant="title" align="center" style={styles.registrationTitle}>
           {t('onboarding_slide4_title')}
         </AppText>
@@ -416,6 +423,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: spacing.md,
     alignItems: 'center',
+  },
+  headerLogo: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    marginBottom: spacing.md,
   },
   registrationTitle: {
     marginBottom: spacing.sm,
