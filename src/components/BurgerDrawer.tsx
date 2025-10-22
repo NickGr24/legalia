@@ -15,7 +15,6 @@ import { useBurgerMenu } from '../contexts/BurgerMenuContext';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../utils/colors';
 import { fonts } from '../utils/fonts';
-import { getUniversityLogoUrl } from '../services/storage';
 import { t } from '../i18n';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
