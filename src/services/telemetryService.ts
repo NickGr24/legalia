@@ -32,18 +32,6 @@ export interface TelemetryEvent {
 
 class TelemetryService {
   private enabled: boolean = true;
-  private sentryAvailable: boolean = false;
-
-  constructor() {
-    // Check if Sentry is available
-    this.checkSentryAvailability();
-  }
-
-  private checkSentryAvailability(): void {
-    // Check if Sentry is configured
-    // This can be expanded when Sentry is integrated
-    this.sentryAvailable = false;
-  }
 
   /**
    * Log a telemetry event
@@ -66,24 +54,8 @@ class TelemetryService {
       console.log('[Telemetry]', event.name, event.data);
     }
 
-    // Send to Sentry (production)
-    if (this.sentryAvailable) {
-      this.sendToSentry(event);
-    }
-
-    // Future: Send to other analytics platforms
-    // this.sendToAnalytics(event);
-  }
-
-  private sendToSentry(event: TelemetryEvent): void {
-    // Placeholder for Sentry integration
-    // When Sentry is configured, use:
-    // Sentry.addBreadcrumb({
-    //   category: event.name.split('.')[0],
-    //   message: event.name,
-    //   data: event.data,
-    //   level: 'info',
-    // });
+    // TODO: Integrate Sentry for production error tracking and breadcrumbs
+    // TODO: Add analytics platforms (e.g., Mixpanel, Amplitude) when needed
   }
 
   /**
