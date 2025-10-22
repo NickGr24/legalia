@@ -12,10 +12,6 @@
       },
       "ios": {
         "buildConfiguration": "Debug"
-      },
-      "env": {
-        "EXPO_USE_FABRIC": "1",
-        "RCT_NEW_ARCH_ENABLED": "1"
       }
     },
     "preview": {
