@@ -17,8 +17,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.legalia.app",
-      "jsEngine": "hermes"
+      "bundleIdentifier": "com.legalia.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -29,8 +28,7 @@
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE"
-      ],
-      "jsEngine": "hermes"
+      ]
     },
     "experiments": {
       "typedRoutes": false

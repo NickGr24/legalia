@@ -33,26 +33,54 @@ if (__DEV__) {
 
 // Custom storage adapter that uses SecureStore on native and AsyncStorage on web
 const ExpoSecureStoreAdapter = {
-  getItem: (key: string) => {
-    if (Platform.OS === 'web') {
-      // Use AsyncStorage on web since SecureStore is not available
-      return AsyncStorage.getItem(key)
+  getItem: async (key: string) => {
+    try {
+      if (Platform.OS === 'web') {
+        return await AsyncStorage.getItem(key)
+      }
+      return await SecureStore.getItemAsync(key)
+    } catch (error) {
+      console.warn('Storage getItem error:', error)
+      // Fallback to AsyncStorage on error
+      try {
+        return await AsyncStorage.getItem(key)
+      } catch (fallbackError) {
+        console.error('Fallback storage getItem failed:', fallbackError)
+        return null
+      }
     }
-    return SecureStore.getItemAsync(key)
   },
-  setItem: (key: string, value: string) => {
-    if (Platform.OS === 'web') {
-      // Use AsyncStorage on web since SecureStore is not available
-      return AsyncStorage.setItem(key, value)
+  setItem: async (key: string, value: string) => {
+    try {
+      if (Platform.OS === 'web') {
+        return await AsyncStorage.setItem(key, value)
+      }
+      return await SecureStore.setItemAsync(key, value)
+    } catch (error) {
+      console.warn('Storage setItem error:', error)
+      // Fallback to AsyncStorage on error
+      try {
+        return await AsyncStorage.setItem(key, value)
+      } catch (fallbackError) {
+        console.error('Fallback storage setItem failed:', fallbackError)
+      }
     }
-    return SecureStore.setItemAsync(key, value)
   },
-  removeItem: (key: string) => {
-    if (Platform.OS === 'web') {
-      // Use AsyncStorage on web since SecureStore is not available
-      return AsyncStorage.removeItem(key)
+  removeItem: async (key: string) => {
+    try {
+      if (Platform.OS === 'web') {
+        return await AsyncStorage.removeItem(key)
+      }
+      return await SecureStore.deleteItemAsync(key)
+    } catch (error) {
+      console.warn('Storage removeItem error:', error)
+      // Fallback to AsyncStorage on error
+      try {
+        return await AsyncStorage.removeItem(key)
+      } catch (fallbackError) {
+        console.error('Fallback storage removeItem failed:', fallbackError)
+      }
     }
-    return SecureStore.deleteItemAsync(key)
   },
 }
 

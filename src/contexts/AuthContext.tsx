@@ -144,40 +144,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signInWithGoogle = async () => {
     try {
       setLoading(true)
-      
-      // Development workaround: Create a test user for Google OAuth
-      if (__DEV__) {
-        
-        // Create a mock Google user for development
-        const mockGoogleUser = {
-          id: 'google-test-user',
-          email: 'test.user@gmail.com',
-          user_metadata: {
-            full_name: 'Test Google User',
-            provider: 'google',
-            name: 'Test Google User',
-          },
-          app_metadata: {},
-          aud: 'authenticated',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }
-        
-        // Simulate successful authentication
-        setUser(mockGoogleUser as any)
-        setSession({
-          user: mockGoogleUser as any,
-          access_token: 'mock-access-token',
-          refresh_token: 'mock-refresh-token',
-          expires_in: 3600,
-          expires_at: Date.now() + 3600000,
-          token_type: 'bearer',
-        } as any)
-        
-        return { error: null }
-      }
-      
-      // Production: Use real OAuth flow
+
+      // Validate OAuth configuration
       const configValidation = googleOAuthService.validateConfiguration()
       if (!configValidation.valid) {
         const errorMessage = `OAuth Configuration Error: ${configValidation.errors.join(', ')}`
@@ -185,6 +153,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { error: { message: errorMessage } as AuthError }
       }
 
+      // Use real OAuth flow
       const result = await googleOAuthService.signInWithGoogle()
 
       if (!result.success) {

@@ -10,9 +10,9 @@ export type RootStackParamList = {
   Main: { refresh?: boolean } | undefined;
   DisciplineRoadmap: { disciplineId: number; disciplineName: string };
   QuizGame: { quizId: number; quizTitle: string };
-  QuizResult: { 
-    score: number; 
-    totalQuestions: number; 
+  QuizResult: {
+    score: number;
+    totalQuestions: number;
     quizTitle: string;
     correctAnswers: number;
     incorrectAnswers?: number;
@@ -22,12 +22,17 @@ export type RootStackParamList = {
     streakInfo?: any;
     shouldRefreshHome?: boolean;
   };
+  FriendsInbox: undefined;
+  FriendsList: undefined;
+  FriendsLeaderboard: undefined;
+  UserProfile: { userId: string; userName?: string };
 };
 
 export type TabParamList = {
   Home: undefined;
   Leaderboard: undefined;
   Profile: undefined;
+  Friends: undefined;
 };
 
 export type HomeScreenNavigationProp = CompositeNavigationProp<
@@ -354,4 +359,68 @@ export interface AchievementUnlock {
   achievement: Achievement;
   unlocked_at: Date;
   isNew: boolean;
+}
+
+// Friendship System Types
+export type FriendshipStatus = 'pending' | 'accepted' | 'declined';
+
+export interface Friendship {
+  id: string;
+  requester_id: string;
+  addressee_id: string;
+  status: FriendshipStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FriendRequest {
+  id: string;
+  requester_id: string;
+  addressee_id: string;
+  status: FriendshipStatus;
+  created_at: string;
+  updated_at: string;
+  // Enriched with user profile data
+  requester?: UserProfile;
+  addressee?: UserProfile;
+}
+
+export interface Friend {
+  friendship_id: string;
+  user_id: string;
+  username: string;
+  email: string;
+  profile?: UserProfile;
+  mutual_friends_count?: number;
+  friend_since: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+  total_score?: number;
+  total_quizzes_completed?: number;
+  current_streak?: number;
+}
+
+export interface FriendsLeaderboardEntry {
+  user_id: string;
+  username: string;
+  email: string;
+  total_score: number;
+  total_quizzes_completed: number;
+  current_streak: number;
+  rank: number;
+  is_current_user: boolean;
+  profile?: UserProfile;
+}
+
+export interface FriendshipStats {
+  total_friends: number;
+  pending_incoming: number;
+  pending_outgoing: number;
+  mutual_friends?: number;
 }

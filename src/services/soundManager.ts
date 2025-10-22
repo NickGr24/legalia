@@ -110,31 +110,40 @@ class SoundManager {
   async playSound(name: SoundName): Promise<void> {
     try {
       if (!this.isInitialized) {
-        await this.initialize();
+        try {
+          await this.initialize();
+        } catch (error) {
+          console.warn(`Failed to initialize sound manager:`, error);
+          return; // Gracefully fail without crashing
+        }
       }
 
       const soundItem = this.sounds[name];
 
       if (!soundItem.isLoaded || !soundItem.source) {
-        console.warn(`❌ Sound '${name}' not loaded, attempting to load...`);
-        await this.loadSound(name);
-        return this.playSound(name); // Retry after loading
+        console.warn(`❌ Sound '${name}' not loaded, skipping playback`);
+        return; // Don't retry, just skip
       }
 
       // For web platform
       if (Platform.OS === 'web' && soundItem.audio) {
         soundItem.audio.currentTime = 0;
         soundItem.audio.play().catch(err => {
-          console.error(`Failed to play ${name}:`, err);
+          console.warn(`Failed to play ${name}:`, err);
         });
         console.log(`🔊 Playing sound (web): ${name}`);
       } else if (soundItem.sound) {
         // For native platforms
-        await soundItem.sound.replayAsync();
-        console.log(`🔊 Playing sound (native): ${name}`);
+        try {
+          await soundItem.sound.replayAsync();
+          console.log(`🔊 Playing sound (native): ${name}`);
+        } catch (error) {
+          console.warn(`Failed to replay sound ${name}:`, error);
+        }
       }
     } catch (error) {
-      console.error(`❌ Failed to play sound '${name}':`, error);
+      console.warn(`❌ Failed to play sound '${name}':`, error);
+      // Never throw, just log and continue
     }
   }
 

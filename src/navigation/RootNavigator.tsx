@@ -8,6 +8,10 @@ import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { DisciplineRoadmapScreen } from '../screens/DisciplineRoadmapScreen';
 import { QuizGameScreen } from '../screens/QuizGameScreen';
 import { QuizResultScreen } from '../screens/QuizResultScreen';
+import { FriendsInboxScreen } from '../screens/FriendsInboxScreen';
+import { FriendsListScreen } from '../screens/FriendsListScreen';
+import { FriendsLeaderboardScreen } from '../screens/FriendsLeaderboardScreen';
+import { UserProfileScreen } from '../screens/UserProfileScreen';
 import { RootStackParamList } from '../utils/types';
 import { colors } from '../utils/colors';
 import { useAuth } from '../contexts/AuthContext';
@@ -187,13 +191,105 @@ export const RootNavigator = () => {
                 ...TransitionPresets.ModalSlideFromBottomIOS,
               }}
             />
-            <Stack.Screen 
-              name="QuizResult" 
+            <Stack.Screen
+              name="QuizResult"
               component={QuizResultScreen}
               options={{
                 presentation: 'card',
                 gestureEnabled: false,
                 ...fadeTransition,
+              }}
+            />
+            <Stack.Screen
+              name="FriendsInbox"
+              component={FriendsInboxScreen}
+              options={{
+                presentation: 'card',
+                ...slideFromRight,
+                headerShown: true,
+                headerLeft: () => <BurgerButton />,
+                headerTitle: '',
+                headerStyle: {
+                  backgroundColor: colors.surface.primary,
+                  borderBottomWidth: 0,
+                  elevation: 4,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                },
+                headerLeftContainerStyle: {
+                  paddingLeft: 8,
+                },
+              }}
+            />
+            <Stack.Screen
+              name="FriendsList"
+              component={FriendsListScreen}
+              options={{
+                presentation: 'card',
+                ...slideFromRight,
+                headerShown: true,
+                headerLeft: () => <BurgerButton />,
+                headerTitle: '',
+                headerStyle: {
+                  backgroundColor: colors.surface.primary,
+                  borderBottomWidth: 0,
+                  elevation: 4,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                },
+                headerLeftContainerStyle: {
+                  paddingLeft: 8,
+                },
+              }}
+            />
+            <Stack.Screen
+              name="FriendsLeaderboard"
+              component={FriendsLeaderboardScreen}
+              options={{
+                presentation: 'card',
+                ...slideFromRight,
+                headerShown: true,
+                headerLeft: () => <BurgerButton />,
+                headerTitle: '',
+                headerStyle: {
+                  backgroundColor: colors.surface.primary,
+                  borderBottomWidth: 0,
+                  elevation: 4,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                },
+                headerLeftContainerStyle: {
+                  paddingLeft: 8,
+                },
+              }}
+            />
+            <Stack.Screen
+              name="UserProfile"
+              component={UserProfileScreen}
+              options={{
+                presentation: 'card',
+                ...slideFromRight,
+                headerShown: true,
+                headerLeft: () => <BurgerButton />,
+                headerTitle: '',
+                headerStyle: {
+                  backgroundColor: colors.surface.primary,
+                  borderBottomWidth: 0,
+                  elevation: 4,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                },
+                headerLeftContainerStyle: {
+                  paddingLeft: 8,
+                },
               }}
             />
           </>

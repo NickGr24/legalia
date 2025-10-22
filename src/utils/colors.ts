@@ -17,12 +17,14 @@ export const colors = {
     primary: '#02343F',     // Dark teal for AI elements
     secondary: '#2E8B8B',   // Medium teal accent
     accent: '#4ECDC4',      // Light teal accent
+    light: 'rgba(78, 205, 196, 0.1)', // Light background tint
     glow: '#B0E0E6',        // Powder blue glow
     glass: 'rgba(2, 52, 63, 0.15)',
     glassBorder: 'rgba(245, 245, 220, 0.3)'
   },
 
   background: {
+    main: '#F5F5DC',        // Main background (alias for primary)
     primary: '#F5F5DC',     // Ivory cream primary
     secondary: '#FEFEF0',   // Very light cream
     tertiary: '#FFFFFF',    // Pure white
@@ -35,6 +37,7 @@ export const colors = {
     primary: '#FFFFFF',
     secondary: '#FEFEF0',   // Light cream
     elevated: '#F5F5DC',    // Ivory cream
+    card: '#FFFFFF',        // Card background
     glass: 'rgba(245, 245, 220, 0.6)',
     frosted: 'rgba(245, 245, 220, 0.8)'
   },
@@ -43,6 +46,7 @@ export const colors = {
     primary: '#02343F',     // Dark teal for primary text
     secondary: '#0A4A58',   // Medium teal for secondary text
     tertiary: '#2E8B8B',    // Light teal for tertiary text
+    disabled: '#D4C5A0',    // Disabled text color
     light: '#4ECDC4',       // Very light teal
     onPrimary: '#F5F5DC',   // Cream text on dark backgrounds
     onSecondary: '#02343F', // Dark text on light backgrounds
@@ -57,9 +61,34 @@ export const colors = {
     accent: 'rgba(2, 52, 63, 0.2)'
   },
 
+  success: {
+    main: '#48BB78',
+    light: '#C6F6D5',
+    dark: '#2F855A'
+  },
+
+  error: {
+    main: '#F56565',
+    light: '#FED7D7',
+    dark: '#C53030'
+  },
+
+  warning: {
+    main: '#ED8936',
+    light: '#FEEBC8',
+    dark: '#C05621'
+  },
+
+  info: {
+    main: '#4299E1',
+    light: '#BEE3F8',
+    dark: '#2C5282'
+  },
+
+  // Legacy support
   status: {
     success: '#48BB78',
-    warning: '#ED8936', 
+    warning: '#ED8936',
     error: '#F56565',
     info: '#4299E1'
   },

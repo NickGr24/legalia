@@ -34,11 +34,16 @@ import {
 } from '../services/leaderboardService';
 import { t } from '../i18n';
 import { BurgerButton } from '../components/BurgerButton';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../utils/types';
 
 type TabType = 'users' | 'universities';
+type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 export const LeaderboardScreen: React.FC = () => {
   const { user } = useAuth();
+  const navigation = useNavigation<NavigationProp>();
   const [selectedTab, setSelectedTab] = useState<TabType>('users');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -165,8 +170,19 @@ export const LeaderboardScreen: React.FC = () => {
   };
 
   const renderUserItem = (item: UserLeaderboardRow, index: number) => {
+    const handleUserPress = () => {
+      navigation.navigate('UserProfile', {
+        userId: item.user_id,
+        userName: item.user_name,
+      });
+    };
+
     return (
-      <View key={`user-${item.user_id}`}>
+      <TouchableOpacity
+        key={`user-${item.user_id}`}
+        onPress={handleUserPress}
+        activeOpacity={0.7}
+      >
         <View style={styles.leaderboardItem}>
           <View style={styles.rankContainer}>
             <AppText variant="body" style={styles.rankBadge}>{getRankBadge(item.rank_position)}</AppText>
@@ -201,8 +217,11 @@ export const LeaderboardScreen: React.FC = () => {
               XP
             </AppText>
           </View>
+
+          {/* Chevron indicator */}
+          <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} style={styles.chevron} />
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 

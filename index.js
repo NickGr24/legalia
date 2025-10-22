@@ -9,13 +9,15 @@ LogBox.ignoreAllLogs(true);
 if (typeof ErrorUtils !== 'undefined') {
   ErrorUtils.setGlobalHandler((error, isFatal) => {
     console.error('Global error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Is fatal:', isFatal);
 
     if (isFatal) {
       setTimeout(() => {
         try {
           Alert.alert(
-            'Error',
-            `${error.name}: ${error.message}`,
+            'Fatal Error - Please Screenshot',
+            `${error.name}: ${error.message}\n\nStack: ${error.stack?.substring(0, 200)}`,
             [{ text: 'OK' }]
           );
         } catch (e) {
