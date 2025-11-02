@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
 import { View, ActivityIndicator, Easing } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TabNavigator } from './TabNavigator';
+import { TabNavigatorNew } from './TabNavigatorNew';
 import { LoginScreen, RegisterScreen } from '../screens';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { DisciplineRoadmapScreen } from '../screens/DisciplineRoadmapScreen';
@@ -157,7 +157,7 @@ export const RootNavigator = () => {
             <Stack.Screen 
               name="Main"
               options={{ gestureEnabled: false }}
-              component={TabNavigator}
+              component={TabNavigatorNew}
             />
             <Stack.Screen 
               name="DisciplineRoadmap" 
