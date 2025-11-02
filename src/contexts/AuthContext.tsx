@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { Session, User, AuthError } from '@supabase/supabase-js'
 import { supabase } from '../services/supabaseClient'
 import { supabaseService } from '../services/supabaseService'
-import { googleOAuthService } from '../services/googleOAuthService'
+import { googleAuthService } from '../services/googleAuthService'
 import { Alert } from 'react-native'
 
 interface AuthContextType {
@@ -145,20 +145,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true)
 
-      // Validate OAuth configuration
-      const configValidation = googleOAuthService.validateConfiguration()
-      if (!configValidation.valid) {
-        const errorMessage = `OAuth Configuration Error: ${configValidation.errors.join(', ')}`
+      // Check if Google Auth is configured
+      if (!googleAuthService.isConfigured()) {
+        const errorMessage = 'Google authentication is not properly configured'
         console.error(errorMessage)
         return { error: { message: errorMessage } as AuthError }
       }
 
-      // Use real OAuth flow
-      const result = await googleOAuthService.signInWithGoogle()
+      // Use the new Google auth service
+      const result = await googleAuthService.signInWithGoogle()
 
       if (!result.success) {
         console.error('Google sign in error:', result.error)
         return { error: { message: result.error || 'Google sign in failed' } as AuthError }
+      }
+
+      // If we have a user, ensure profile exists
+      if (result.user) {
+        try {
+          const profile = await supabaseService.getUserProfile(result.user.id)
+          if (!profile) {
+            await supabaseService.createUserProfile()
+          }
+        } catch (error) {
+          console.error('Error handling user profile after Google sign in:', error)
+        }
       }
 
       return { error: null }

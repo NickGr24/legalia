@@ -1,5 +1,5 @@
 import * as AuthSession from 'expo-auth-session';
-// import * as WebBrowser from 'expo-web-browser';
+import * as WebBrowser from 'expo-web-browser';
 import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
 import { supabaseService } from './supabaseService';
@@ -81,36 +81,43 @@ class GoogleOAuthService {
    */
   async signInWithGoogleNative(): Promise<GoogleOAuthResult> {
     try {
-
-      // Generate nonce for security
-      const nonce = await this.generateNonce();
-
-      // Build the OAuth URL manually
-      const authUrl = this.buildGoogleOAuthUrl(nonce);
-
+      // For native, we'll use Supabase's OAuth flow with WebBrowser
+      // This approach works better than trying to handle ID tokens manually
       
-      // Use WebBrowser to open the OAuth URL
-      // The redirectUri tells Google where to redirect, but WebBrowser will intercept it
-      // TODO: Install expo-web-browser package for native OAuth
-      return {
-        success: false,
-        error: 'Google Sign In is currently only available in development mode. Please use email/password authentication.',
-      };
-
+      // Get the OAuth URL from Supabase
+      const { data, error } = await supabaseService.getOAuthUrl('google', this.redirectUri);
       
-      // if (result.type === 'success' && result.url) {
-      //   return await this.handleOAuthCallback(result.url, nonce);
-      // } else if (result.type === 'cancel') {
-      //   return {
-      //     success: false,
-      //     error: 'Authentication was cancelled',
-      //   };
-      // } else {
-      //   return {
-      //     success: false,
-      //     error: 'Authentication failed',
-      //   };
-      // }
+      if (error || !data?.url) {
+        throw new Error('Failed to get OAuth URL');
+      }
+
+      // Complete OAuth flow in the browser
+      WebBrowser.maybeCompleteAuthSession();
+      
+      // Open the OAuth URL
+      const result = await WebBrowser.openAuthSessionAsync(
+        data.url,
+        this.redirectUri
+      );
+      
+      if (result.type === 'success' && result.url) {
+        // The URL should contain the access token or code
+        // Supabase will handle the session automatically via deep linking
+        return {
+          success: true,
+          // User data will be available via auth state change
+        };
+      } else if (result.type === 'cancel') {
+        return {
+          success: false,
+          error: 'Authentication was cancelled',
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Authentication failed',
+        };
+      }
 
     } catch (error) {
       console.error('Google OAuth Native Error:', error);
