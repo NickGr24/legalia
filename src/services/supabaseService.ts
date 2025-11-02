@@ -15,6 +15,15 @@ import {
   QuizResult,
   UserStats,
 } from '../utils/supabaseTypes'
+import { calculateQuizScore, calculateLevel } from './scoringService'
+import { 
+  calculateStreakInfo, 
+  getChisinauDateString,
+  getChisinauWeekStart,
+  getChisinauWeekEnd
+} from './timezoneService'
+import { idempotencyService } from './idempotencyService'
+import { logger } from '../utils/logger'
 
 class SupabaseService {
   // ==========================================
@@ -141,16 +150,50 @@ class SupabaseService {
     quizId: number,
     score: number,
     correctAnswers: number,
-    totalQuestions: number
+    totalQuestions: number,
+    timeSpentSeconds: number = 0
   ): Promise<QuizResult> {
     const user = await this.requireAuth()
     
+    // Create idempotency key for this submission
+    const idempotencyKey = idempotencyService.generateKey(
+      user.id,
+      'quiz_submit',
+      quizId,
+      correctAnswers,
+      totalQuestions
+    )
+    
+    // Execute with idempotency protection
+    return idempotencyService.executeWithIdempotency(idempotencyKey, async () => {
+      return this._submitQuizResultInternal(
+        user.id,
+        quizId,
+        score,
+        correctAnswers,
+        totalQuestions,
+        timeSpentSeconds
+      )
+    })
+  }
+  
+  private async _submitQuizResultInternal(
+    userId: string,
+    quizId: number,
+    score: number,
+    correctAnswers: number,
+    totalQuestions: number,
+    timeSpentSeconds: number = 0
+  ): Promise<QuizResult> {
+    
     // Anti-cheating validations
     if (correctAnswers < 0 || correctAnswers > totalQuestions) {
+      logger.error('Invalid quiz submission', { correctAnswers, totalQuestions, userId })
       throw new Error('Invalid number of correct answers')
     }
     
     if (totalQuestions <= 0 || totalQuestions > 50) { // Reasonable max questions per quiz
+      logger.error('Invalid questions count', { totalQuestions, userId })
       throw new Error('Invalid total questions count')
     }
     
@@ -173,7 +216,7 @@ class SupabaseService {
     const currentlyPassed = percentage >= 70 // 70% threshold for completion
     
     // First, check if user has already taken this quiz
-    const existingAttempt = await this.getUserProgressForQuiz(quizId, user.id)
+    const existingAttempt = await this.getUserProgressForQuiz(quizId, userId)
     
     // Determine if this is a better attempt
     let shouldUpdate = true
@@ -227,7 +270,7 @@ class SupabaseService {
     const { data, error } = await supabase
       .from('home_marks_of_user')
       .upsert({
-        user_id: user.id,
+        user_id: userId,
         quiz_id: quizId,
         score: percentage,
         completed: finalCompleted,
@@ -241,7 +284,16 @@ class SupabaseService {
 
     // Update user streak only if quiz was completed AND this is an improvement (or first attempt)
     if (currentlyPassed && (isImprovement || !existingAttempt)) {
-      await this.updateUserStreak()
+      // Need to update streak for specific user
+      const currentStreak = await this.getUserStreak(userId)
+      const streakInfo = calculateStreakInfo(
+        currentStreak?.last_active_date || null,
+        currentStreak?.current_streak || 0
+      )
+      
+      if (streakInfo.shouldIncrementStreak || streakInfo.shouldResetStreak) {
+        await this._updateUserStreakForUser(userId, streakInfo)
+      }
     }
 
     return {
@@ -352,64 +404,93 @@ class SupabaseService {
 
   async updateUserStreak(): Promise<UserStreak> {
     const user = await this.requireAuth()
-    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
     
     // Get current streak data
     const currentStreak = await this.getUserStreak()
     
+    // Use timezone-aware streak calculation
+    const streakInfo = calculateStreakInfo(
+      currentStreak?.last_active_date || null,
+      currentStreak?.current_streak || 0
+    )
+    
     if (!currentStreak) {
-      // Create new streak record
+      // Create new streak record with Europe/Chisinau timezone
       const { data, error } = await supabase
         .from('home_userstreak')
         .insert({
           user_id: user.id,
-          current_streak: 1,
-          longest_streak: 1,
-          last_active_date: today,
+          current_streak: streakInfo.currentStreak,
+          longest_streak: streakInfo.currentStreak,
+          last_active_date: streakInfo.todayDate,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         } as any)
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        logger.error('Failed to create user streak', { error, userId: user.id })
+        throw error
+      }
+      
+      logger.info('Created new streak record', { userId: user.id, streak: streakInfo.currentStreak })
       return data
     }
 
-    // Check if user was active yesterday or today
-    const lastActiveDate = new Date(currentStreak.last_active_date)
-    const todayDate = new Date(today)
-    const diffDays = Math.floor((todayDate.getTime() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24))
-
-    let newCurrentStreak = currentStreak.current_streak
-    let newLongestStreak = currentStreak.longest_streak
-
-    if (diffDays === 0) {
-      // Same day - no change to streak
+    // Check if we need to update the streak
+    if (!streakInfo.shouldIncrementStreak && !streakInfo.shouldResetStreak) {
+      // Same day activity - no change to streak
+      logger.debug('Streak unchanged - same day activity', { userId: user.id })
       return currentStreak
-    } else if (diffDays === 1) {
-      // Consecutive day - increment streak
-      newCurrentStreak += 1
-      newLongestStreak = Math.max(newLongestStreak, newCurrentStreak)
-    } else {
-      // Streak broken - reset to 1
-      newCurrentStreak = 1
     }
+
+    let newCurrentStreak = streakInfo.currentStreak
+    let newLongestStreak = Math.max(currentStreak.longest_streak, newCurrentStreak)
 
     const { data, error } = await (supabase as any)
       .from('home_userstreak')
       .update({
         current_streak: newCurrentStreak,
         longest_streak: newLongestStreak,
-        last_active_date: today,
+        last_active_date: streakInfo.todayDate,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', user.id)
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      logger.error('Failed to update user streak', { error, userId: user.id })
+      throw error
+    }
+    
+    logger.info('Updated user streak', { 
+      userId: user.id, 
+      previousStreak: currentStreak.current_streak,
+      newStreak: newCurrentStreak,
+      wasReset: streakInfo.shouldResetStreak 
+    })
+    
     return data
+  }
+  
+  // Helper method for updating streak for a specific user
+  private async _updateUserStreakForUser(userId: string, streakInfo: any): Promise<void> {
+    const { data, error } = await (supabase as any)
+      .from('home_userstreak')
+      .upsert({
+        user_id: userId,
+        current_streak: streakInfo.currentStreak,
+        longest_streak: streakInfo.currentStreak,
+        last_active_date: streakInfo.todayDate,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId)
+    
+    if (error) {
+      logger.error('Failed to update user streak', { error, userId })
+    }
   }
 
   // ==========================================

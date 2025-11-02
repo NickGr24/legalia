@@ -3,6 +3,9 @@
 // =====================================================
 
 import { supabase } from './supabaseClient';
+import { calculateQuizScore, SCORING_CONSTANTS } from './scoringService';
+import { getChisinauWeekStart } from './timezoneService';
+import { logger } from '../utils/logger';
 
 // Types for the leaderboard system
 export interface LeaderboardEntry {
@@ -52,13 +55,8 @@ export async function getUserPointsFromQuizzes(userId: string): Promise<{
   completedQuizzes: number;
 } | null> {
   try {
-    // Get current week start date (Monday)
-    const now = new Date();
-    const currentWeekStart = new Date(now);
-    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert Sunday (0) to 6 days back
-    currentWeekStart.setDate(now.getDate() - daysToMonday);
-    currentWeekStart.setHours(0, 0, 0, 0);
+    // Use Europe/Chisinau timezone for week calculation
+    const currentWeekStart = getChisinauWeekStart();
 
     // Get all quiz results for the user
     const { data: quizResults, error } = await supabase
@@ -89,11 +87,17 @@ export async function getUserPointsFromQuizzes(userId: string): Promise<{
 
 
     quizResults.forEach((result, index) => {
-      // Fixed 15 XP per successfully completed quiz (≥70%)
+      // Use unified scoring service for consistent XP calculation
       let points = 0;
       
       if ((result as any).completed) {
-        points = 15; // Fixed 15 XP for successful completion
+        // Fixed XP per successful completion from SCORING_CONSTANTS
+        points = SCORING_CONSTANTS.BASE_XP_PER_COMPLETED_QUIZ;
+        
+        // Add perfect score bonus if applicable
+        if ((result as any).score === 100) {
+          points += SCORING_CONSTANTS.PERFECT_SCORE_BONUS;
+        }
       }
 
       totalPoints += points;
@@ -351,54 +355,8 @@ export async function getLeaderboardWithRealUser(
       }
     }
 
-    // Create mock leaderboard entries (realistic points)
-    const mockUsers: LeaderboardEntry[] = [
-      {
-        rank_position: 1, // Will be adjusted
-        user_id: 'mock-1',
-        user_name: 'Andra Gheorghe',
-        avatar_url: '',
-        weekly_points: type === 'weekly' ? 120 : undefined, // 12 correct answers this week
-        total_points: type === 'alltime' ? 450 : undefined, // ~45 total correct answers
-        is_current_user: false,
-      },
-      {
-        rank_position: 2, // Will be adjusted
-        user_id: 'mock-2',
-        user_name: 'Mihai Cristea',
-        avatar_url: '',
-        weekly_points: type === 'weekly' ? 100 : undefined, // 10 correct answers this week
-        total_points: type === 'alltime' ? 380 : undefined, // ~38 total correct answers
-        is_current_user: false,
-      },
-      {
-        rank_position: 3, // Will be adjusted
-        user_id: 'mock-3',
-        user_name: 'Diana Moldovan',
-        avatar_url: '',
-        weekly_points: type === 'weekly' ? 80 : undefined, // 8 correct answers this week
-        total_points: type === 'alltime' ? 320 : undefined, // ~32 total correct answers
-        is_current_user: false,
-      },
-      {
-        rank_position: 4, // Will be adjusted
-        user_id: 'mock-4',
-        user_name: 'Radu Stanciu',
-        avatar_url: '',
-        weekly_points: type === 'weekly' ? 70 : undefined, // 7 correct answers this week
-        total_points: type === 'alltime' ? 290 : undefined, // ~29 total correct answers
-        is_current_user: false,
-      },
-      {
-        rank_position: 5, // Will be adjusted
-        user_id: 'mock-5',
-        user_name: 'Ioana Dumitrescu',
-        avatar_url: '',
-        weekly_points: type === 'weekly' ? 60 : undefined, // 6 correct answers this week
-        total_points: type === 'alltime' ? 250 : undefined, // ~25 total correct answers
-        is_current_user: false,
-      },
-    ];
+    // NO MOCK DATA - Real users only
+    const mockUsers: LeaderboardEntry[] = [];
 
     // Get real user data
     const userPoints = type === 'weekly' ? userStats.weekly_points : userStats.total_points;
