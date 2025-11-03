@@ -1,7 +1,7 @@
 export { LoginScreen } from './LoginScreen';
 export { RegisterScreen } from './RegisterScreen';
 export { OnboardingScreen } from './OnboardingScreen';
-export { HomeScreen } from './HomeScreen';
+export { HomeScreenNew } from './HomeScreenNew';
 export { LeaderboardScreen } from './LeaderboardScreen';
 export { ProfileScreen } from './ProfileScreen';
 
