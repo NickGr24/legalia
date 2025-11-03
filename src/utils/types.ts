@@ -22,9 +22,6 @@ export type RootStackParamList = {
     streakInfo?: any;
     shouldRefreshHome?: boolean;
   };
-  FriendsInbox: undefined;
-  FriendsList: undefined;
-  FriendsLeaderboard: undefined;
   UserProfile: { userId: string; userName?: string };
 };
 

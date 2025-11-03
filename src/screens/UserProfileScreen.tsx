@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { supabase } from '@/services/supabaseClient';
-import { FriendRequestButton } from '@/components/FriendRequestButton';
+// import { FriendRequestButton } from '@/components/FriendRequestButton'; // Friends feature to be implemented
 import { useAuth } from '@/contexts/AuthContext';
 import { colors } from '@/utils/colors';
 import {
@@ -194,7 +194,8 @@ export const UserProfileScreen: React.FC = () => {
           {/* Friend Request Button (only for other users) */}
           {!isOwnProfile && (
             <View style={styles.friendButtonContainer}>
-              <FriendRequestButton targetUserId={userId} />
+              {/* <FriendRequestButton targetUserId={userId} /> */}
+              {/* Friends feature to be implemented */}
             </View>
           )}
 
