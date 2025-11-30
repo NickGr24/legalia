@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, AudioPlayer } from 'expo-audio';
 
 type SoundName = 'select' | 'transition' | 'win';
 
@@ -7,7 +7,7 @@ interface SoundItem {
   source: any;
   isLoaded: boolean;
   audio?: HTMLAudioElement; // For web
-  sound?: Audio.Sound; // For native
+  player?: AudioPlayer; // For native (expo-audio)
 }
 
 class SoundManager {
@@ -42,36 +42,25 @@ class SoundManager {
     try {
       console.log('🎵 Initializing SoundManager...');
 
-      // Configure audio mode for native platforms
-      if (Platform.OS !== 'web') {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          staysActiveInBackground: false,
-          shouldDuckAndroid: true,
-        });
+      // Load all sound files
+      const soundFiles = this.getSoundFiles();
+      
+      for (const [name, soundFile] of Object.entries(soundFiles) as Array<[SoundName, any]>) {
+        if (soundFile) {
+          await this.loadSound(name, soundFile);
+        }
       }
-
-      // Preload all sounds
-      await Promise.all([
-        this.loadSound('select'),
-        this.loadSound('transition'),
-        this.loadSound('win'),
-      ]);
 
       this.isInitialized = true;
       console.log('✅ SoundManager initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize SoundManager:', error);
+      this.isInitialized = false; // Mark as not initialized so we can try again later
     }
   }
 
-  private async loadSound(name: SoundName): Promise<void> {
+  private async loadSound(name: SoundName, soundFile: any): Promise<void> {
     try {
-      if (this.sounds[name].isLoaded) return;
-
-      const soundFiles = this.getSoundFiles();
-      const soundFile = soundFiles[name];
-
       if (!soundFile) {
         console.warn(`❌ Sound file not found for '${name}'`);
         return;
@@ -79,7 +68,7 @@ class SoundManager {
 
       // For web platform, create audio element
       if (Platform.OS === 'web') {
-        const audio = new Audio(soundFile);
+        const audio = new (window as any).Audio(soundFile);
         audio.preload = 'auto';
         this.sounds[name] = {
           source: soundFile,
@@ -87,16 +76,13 @@ class SoundManager {
           audio: audio,
         };
       } else {
-        // For native platforms, load with expo-av
-        const { sound } = await Audio.Sound.createAsync(soundFile, {
-          shouldPlay: false,
-          volume: 1.0,
-        });
-
+        // For native platforms, create AudioPlayer with expo-audio
+        const player = createAudioPlayer(soundFile);
+        
         this.sounds[name] = {
           source: soundFile,
           isLoaded: true,
-          sound: sound,
+          player: player,
         };
       }
 
@@ -128,76 +114,55 @@ class SoundManager {
       // For web platform
       if (Platform.OS === 'web' && soundItem.audio) {
         soundItem.audio.currentTime = 0;
-        soundItem.audio.play().catch(err => {
+        soundItem.audio.play().catch((err: any) => {
           console.warn(`Failed to play ${name}:`, err);
         });
         console.log(`🔊 Playing sound (web): ${name}`);
-      } else if (soundItem.sound) {
-        // For native platforms
+      } else if (soundItem.player) {
+        // For native platforms using expo-audio
         try {
-          await soundItem.sound.replayAsync();
+          // Reset to beginning and play
+          soundItem.player.seekTo(0);
+          soundItem.player.play();
           console.log(`🔊 Playing sound (native): ${name}`);
         } catch (error) {
-          console.warn(`Failed to replay sound ${name}:`, error);
+          console.warn(`Failed to play ${name}:`, error);
         }
       }
     } catch (error) {
-      console.warn(`❌ Failed to play sound '${name}':`, error);
-      // Never throw, just log and continue
+      console.error(`❌ Error playing sound '${name}':`, error);
+      // Don't throw - just log and continue
     }
   }
 
-  async cleanup(): Promise<void> {
+  async unloadSounds(): Promise<void> {
+    console.log('🧹 Unloading sounds...');
+    
     try {
-      // Cleanup audio elements for web
-      if (Platform.OS === 'web') {
-        Object.values(this.sounds).forEach(item => {
-          if (item.audio) {
-            item.audio.pause();
-            item.audio = undefined;
-          }
-        });
-      } else {
-        // Cleanup expo-av sounds for native
-        await Promise.all(
-          Object.values(this.sounds).map(async item => {
-            if (item.sound) {
-              await item.sound.unloadAsync();
-              item.sound = undefined;
-            }
-          })
-        );
+      for (const [name, soundItem] of Object.entries(this.sounds) as Array<[SoundName, SoundItem]>) {
+        if (soundItem.player) {
+          // Release the audio player to prevent memory leaks
+          soundItem.player.release();
+          console.log(`✅ Unloaded sound: ${name}`);
+        }
+        soundItem.isLoaded = false;
       }
-
-      // Reset state
-      this.sounds = {
-        select: { source: null, isLoaded: false },
-        transition: { source: null, isLoaded: false },
-        win: { source: null, isLoaded: false },
-      };
       this.isInitialized = false;
-
-      console.log('✅ SoundManager cleaned up');
     } catch (error) {
-      console.error('❌ Failed to cleanup SoundManager:', error);
+      console.error('❌ Error unloading sounds:', error);
     }
   }
 
-  // Utility method to check if sounds are ready
-  isReady(): boolean {
-    return this.isInitialized && Object.values(this.sounds).every(item => item.isLoaded);
-  }
-
-  // Method to preload a specific sound if needed
-  async preloadSound(name: SoundName): Promise<void> {
-    if (!this.sounds[name].isLoaded) {
-      await this.loadSound(name);
-    }
+  // Alias for unloadSounds for backward compatibility
+  async cleanup(): Promise<void> {
+    return this.unloadSounds();
   }
 }
 
-// Export singleton instance
+// Export the singleton instance
 export const soundManager = new SoundManager();
 
-// Export convenience function for easy usage
-export const playSound = (name: SoundName) => soundManager.playSound(name);
+// Export the playSound function for backward compatibility
+export const playSound = (name: SoundName): Promise<void> => {
+  return soundManager.playSound(name);
+};

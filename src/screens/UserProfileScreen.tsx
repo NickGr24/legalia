@@ -70,7 +70,7 @@ export const UserProfileScreen: React.FC = () => {
       const { data: quizData, error: quizError } = await supabase
         .from('home_marks_of_user')
         .select('marks_obtained')
-        .eq('user_id', userId);
+        .eq('user_id', userId) as { data: Array<{ marks_obtained: number }> | null; error: any };
 
       if (quizError) throw quizError;
 
@@ -83,7 +83,7 @@ export const UserProfileScreen: React.FC = () => {
         .from('home_userstreak')
         .select('current_streak, longest_streak')
         .eq('user_id', userId)
-        .maybeSingle();
+        .maybeSingle() as { data: { current_streak: number; longest_streak: number } | null; error: any };
 
       if (streakError && streakError.code !== 'PGRST116') throw streakError;
 
@@ -92,7 +92,7 @@ export const UserProfileScreen: React.FC = () => {
         .from('auth.users')
         .select('email, created_at')
         .eq('id', userId)
-        .maybeSingle();
+        .maybeSingle() as { data: { email: string; created_at: string } | null; error: any };
 
       // Fallback: try to get email from a table that references the user
       let email = userData?.email || '';
@@ -261,8 +261,8 @@ export const UserProfileScreen: React.FC = () => {
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => {
-                  // Navigate to friends leaderboard to compare
-                  navigation.navigate('FriendsLeaderboard');
+                  // Navigate to main screen with leaderboard tab
+                  navigation.navigate('Main');
                 }}
               >
                 <Ionicons name="bar-chart" size={24} color={colors.ai.primary} />
@@ -279,7 +279,7 @@ export const UserProfileScreen: React.FC = () => {
 
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => navigation.navigate('Leaderboard')}
+            onPress={() => navigation.navigate('Main')}
           >
             <Ionicons name="trophy" size={24} color={colors.warning.main} />
             <View style={styles.actionTextContainer}>

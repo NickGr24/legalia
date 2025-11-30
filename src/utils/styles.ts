@@ -7,6 +7,7 @@ export { fontConfig };
 
 // Спейсинги (увеличены для более воздушного дизайна)
 export const spacing = {
+  xxs: 4,
   xs: 6,
   sm: 12,
   md: 18,

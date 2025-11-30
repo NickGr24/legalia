@@ -17,7 +17,6 @@ import { newTheme } from '../utils/newDesignSystem';
 import { t } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProgress } from '../hooks/useUserProgress';
-import { useSupabaseData } from '../hooks/useSupabaseData';
 import { supabaseService } from '../services/supabaseService';
 
 const { width } = Dimensions.get('window');
@@ -99,8 +98,9 @@ const DisciplineCard: React.FC<DisciplineCardProps> = ({
 export const HomeScreenNew = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
-  const { getUserProgress } = useUserProgress();
-  const { disciplines, loading } = useSupabaseData();
+  const { data: userProgress, loading: progressLoading } = useUserProgress();
+  const [disciplines, setDisciplines] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalDisciplines: 0,
     availableQuizzes: 0,
@@ -108,11 +108,27 @@ export const HomeScreenNew = () => {
     completedQuizzes: 0,
     averageScore: 0
   });
-  const [userProgress, setUserProgress] = useState<any[]>([]);
 
   useEffect(() => {
-    loadUserData();
-  }, [user]);
+    loadDisciplines();
+  }, []);
+
+  useEffect(() => {
+    if (user && disciplines.length > 0 && !progressLoading) {
+      loadUserData();
+    }
+  }, [user, disciplines, progressLoading]);
+
+  const loadDisciplines = async () => {
+    try {
+      const data = await supabaseService.getAllDisciplines();
+      setDisciplines(data);
+    } catch (error) {
+      console.error('Error loading disciplines:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadUserData = async () => {
     if (!user) return;
@@ -120,20 +136,17 @@ export const HomeScreenNew = () => {
     try {
       // Load user stats
       const userStats = await supabaseService.getUserStats();
-      const progress = await getUserProgress();
-      
-      setUserProgress(progress);
       
       // Calculate stats
-      const totalQuizzes = disciplines.reduce((sum, d) => sum + (d.quizzes?.length || 0), 0);
-      const completedCount = progress.filter(p => p.completed).length;
-      const avgScore = progress.length > 0 
-        ? Math.round(progress.reduce((sum, p) => sum + p.score, 0) / progress.length)
+      const totalQuizzes = disciplines.reduce((sum: number, d: any) => sum + (d.quizzes?.length || 0), 0);
+      const completedCount = userProgress.filter((p: any) => p.completed).length;
+      const avgScore = userProgress.length > 0 
+        ? Math.round(userProgress.reduce((sum: number, p: any) => sum + p.score, 0) / userProgress.length)
         : 0;
       
       setStats({
         totalDisciplines: disciplines.length,
-        availableQuizzes: totalQuizzes - completedCount,
+        availableQuizzes: totalQuizzes,
         streak: userStats.streak?.current_streak || 0,
         completedQuizzes: completedCount,
         averageScore: avgScore
@@ -144,12 +157,12 @@ export const HomeScreenNew = () => {
   };
 
   const getDisciplineProgress = (disciplineId: number) => {
-    const discipline = disciplines.find(d => d.id === disciplineId);
+    const discipline = disciplines.find((d: any) => d.id === disciplineId);
     if (!discipline || !discipline.quizzes) return { progress: 0, completed: 0, total: 0 };
     
-    const disciplineQuizIds = discipline.quizzes.map(q => q.id);
+    const disciplineQuizIds = discipline.quizzes.map((q: any) => q.id);
     const completedQuizzes = userProgress.filter(
-      p => disciplineQuizIds.includes(p.quiz_id) && p.completed
+      (p: any) => disciplineQuizIds.includes(p.quiz_id) && p.completed
     ).length;
     
     const progress = discipline.quizzes.length > 0 
@@ -288,7 +301,7 @@ export const HomeScreenNew = () => {
         <View style={styles.disciplinesSection}>
           <Text style={styles.sectionTitle}>Alege o disciplină</Text>
           
-          {disciplines.map((discipline, index) => {
+          {disciplines.map((discipline: any, index: number) => {
             const { progress, completed, total } = getDisciplineProgress(discipline.id);
             return (
               <DisciplineCard

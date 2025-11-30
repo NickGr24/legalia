@@ -14,6 +14,7 @@ export const newColors = {
     tertiary: '#353535',     // Even lighter for hover/active states
     card: '#2D2D2D',        // Card backgrounds
     modal: '#242424',        // Modal backgrounds
+    deepDark: '#131515',     // Deepest dark background
   },
   
   // Text colors
@@ -28,11 +29,13 @@ export const newColors = {
   accents: {
     sage: '#9FA88E',         // Sage green (from discipline cards)
     peach: '#E8C4A0',        // Soft peach (from stats cards)
-    mint: '#7FA89C',         // Mint green 
+    mint: '#7FA89C',         // Mint green
     lavender: '#B5A7C6',     // Soft lavender
     coral: '#D4A5A5',        // Muted coral
     sand: '#C9B79C',         // Sandy beige
     sky: '#9FC5E8',          // Soft sky blue
+    teal: '#339989',         // Vibrant teal
+    cyan: '#7DE2D1',         // Bright cyan/aqua
   },
   
   // Status colors
@@ -313,6 +316,16 @@ export const illustrationColors = {
     primary: '#9FC5E8',    // Sky blue
     secondary: '#7AA9D6',  // Darker sky
     accent: '#C2DAF0',     // Light sky
+  },
+  ocean: {
+    primary: '#339989',    // Vibrant teal
+    secondary: '#267A6D',  // Darker teal
+    accent: '#4DB8A6',     // Light teal
+  },
+  aqua: {
+    primary: '#7DE2D1',    // Bright cyan
+    secondary: '#5BC4B4',  // Darker cyan
+    accent: '#A0EDE0',     // Light cyan
   },
 };
 

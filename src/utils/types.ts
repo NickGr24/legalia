@@ -28,8 +28,8 @@ export type RootStackParamList = {
 export type TabParamList = {
   Home: undefined;
   Leaderboard: undefined;
+  Achievements: undefined;
   Profile: undefined;
-  Friends: undefined;
 };
 
 export type HomeScreenNavigationProp = CompositeNavigationProp<

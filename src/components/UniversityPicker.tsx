@@ -7,10 +7,10 @@ import {
   FlatList,
   TextInput,
   StyleSheet,
-  SafeAreaView,
   Image,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, borderRadius, fontSize, shadows, commonStyles } from '../utils/styles';
 import { logWarning } from '../utils/logger';

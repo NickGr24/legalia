@@ -104,7 +104,11 @@ export const colors = {
     background: [newColors.background.primary, newColors.background.secondary] as const,
     backgroundAlt: [newColors.background.secondary, newColors.background.tertiary] as const,
     backgroundCool: [newColors.background.primary, newColors.accents.sky] as const,
-    backgroundWarm: [newColors.background.primary, newColors.accents.peach] as const
+    backgroundWarm: [newColors.background.primary, newColors.accents.peach] as const,
+    // New teal/cyan gradients
+    ocean: [newColors.accents.teal, newColors.accents.cyan] as const,
+    tealWave: [newColors.background.deepDark, newColors.accents.teal] as const,
+    aqua: [newColors.accents.cyan, newColors.accents.sky] as const,
   },
 
   // Legacy support - using new accent colors
@@ -124,7 +128,10 @@ export const colors = {
 
   // Additional accent colors
   gold: newColors.accents.sand,
-  
+  teal: newColors.accents.teal,
+  cyan: newColors.accents.cyan,
+  deepDark: newColors.background.deepDark,
+
   // Add illustration colors for cards
   illustrations: illustrationColors
 }; 

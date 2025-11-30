@@ -15,6 +15,27 @@ export default function App() {
       setStep('Loading basic modules...');
       await new Promise(resolve => setTimeout(resolve, 100));
 
+      // Initialize expo-asset first
+      setStep('Initializing assets...');
+      const { Asset } = require('expo-asset');
+      await Asset.loadAsync([
+        require('./assets/icon.png'),
+        require('./assets/splash.png'),
+      ]).catch(() => {
+        // Ignore asset loading errors for now
+        console.log('Some assets failed to load, continuing...');
+      });
+
+      // Load fonts
+      setStep('Loading fonts...');
+      const { loadAsync } = require('expo-font');
+      const { Ionicons } = require('@expo/vector-icons');
+      await loadAsync({
+        ...Ionicons.font,
+      }).catch(() => {
+        console.log('Font loading failed, continuing...');
+      });
+
       setStep('Loading StatusBar...');
       const { StatusBar } = require('expo-status-bar');
 

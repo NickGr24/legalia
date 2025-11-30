@@ -228,34 +228,31 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
 
   const renderSlide4 = () => (
     <View style={styles.registrationSlide}>
-      <View style={styles.registrationHeader}>
-        <Image
-          source={require('../../assets/legalia-logo.png')}
-          style={styles.headerLogo}
-          resizeMode="contain"
-        />
-        <AppText variant="title" align="center" style={styles.registrationTitle}>
-          {t('onboarding_slide4_title')}
-        </AppText>
-        <AppText variant="subtitle" align="center" color="secondary" style={styles.registrationSubtitle}>
-          {t('onboarding_slide4_subtitle')}
-        </AppText>
-      </View>
-      
       <KeyboardAvoidingView
         style={styles.formContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={160}
+        keyboardVerticalOffset={100}
       >
         <ScrollView 
           style={styles.formScrollView}
-          contentContainerStyle={[
-            styles.formScrollContent,
-            { paddingBottom: Math.max(insets.bottom, safeAreaPadding.bottom) + 24 }
-          ]}
+          contentContainerStyle={styles.formScrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          <View style={styles.registrationHeader}>
+            <Image
+              source={require('../../assets/legalia-logo.png')}
+              style={styles.headerLogo}
+              resizeMode="contain"
+            />
+            <AppText variant="title" align="center" style={styles.registrationTitle}>
+              {t('onboarding_slide4_title')}
+            </AppText>
+            <AppText variant="subtitle" align="center" color="secondary" style={styles.registrationSubtitle}>
+              {t('onboarding_slide4_subtitle')}
+            </AppText>
+          </View>
+          
           <View style={styles.form}>
           {/* Name input */}
           <View style={styles.inputContainer}>
@@ -340,22 +337,22 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
             </View>
           )}
           </View>
+          
+          {/* Login Link */}
+          <View style={styles.loginLinkContainer}>
+            <AppText variant="body" align="center" style={styles.loginLinkText}>
+              {t('auth_have_account')}{' '}
+              <AppText 
+                variant="body"
+                style={styles.loginLink}
+                onPress={() => navigation.navigate('Login')}
+              >
+                {t('auth_login_link')}
+              </AppText>
+            </AppText>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      
-      {/* Login Link */}
-      <View style={styles.loginLinkContainer}>
-        <AppText variant="body" align="center" style={styles.loginLinkText}>
-          {t('auth_have_account')}{' '}
-          <AppText 
-            variant="body"
-            style={styles.loginLink}
-            onPress={() => navigation.navigate('Login')}
-          >
-            {t('auth_login_link')}
-          </AppText>
-        </AppText>
-      </View>
     </View>
   );
 
@@ -418,8 +415,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.primary,
   },
+  registrationScrollView: {
+    flex: 1,
+  },
+  registrationScrollContent: {
+    flexGrow: 1,
+    paddingBottom: 120, // Space for bottom stepper
+  },
   registrationHeader: {
-    paddingTop: spacing.xl,
+    paddingTop: spacing.lg,
     paddingHorizontal: 24,
     paddingBottom: spacing.md,
     alignItems: 'center',
@@ -439,16 +443,16 @@ const styles = StyleSheet.create({
   
   formContainer: {
     flex: 1,
-    paddingHorizontal: 24,
   },
   formScrollView: {
     flex: 1,
   },
   formScrollContent: {
     flexGrow: 1,
+    paddingHorizontal: 24,
   },
   form: {
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.md,
   },
   inputContainer: {
     marginBottom: spacing.md,
@@ -463,6 +467,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.light,
     minHeight: 48,
+    fontFamily: 'System', // Ensure consistent font
     ...shadows.small,
   },
   inputError: {
@@ -481,8 +486,8 @@ const styles = StyleSheet.create({
   },
   
   loginLinkContainer: {
-    paddingHorizontal: 24,
-    paddingBottom: spacing.md,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
     alignItems: 'center',
   },
   loginLinkText: {

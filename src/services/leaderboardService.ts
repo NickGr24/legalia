@@ -224,6 +224,28 @@ export async function getUsersAllTime(limit: number = 100): Promise<UserLeaderbo
 }
 
 /**
+ * Get users leaderboard (this week)
+ */
+export async function getUsersThisWeek(limit: number = 100): Promise<UserLeaderboardRow[]> {
+  try {
+    const { data, error } = await supabase
+      .from('leaderboard_users_week')
+      .select('*')
+      .limit(limit);
+
+    if (error) {
+      console.error('Error fetching weekly users leaderboard:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getUsersThisWeek:', error);
+    return [];
+  }
+}
+
+/**
  * Get universities leaderboard (all-time)
  * Now shows ALL universities, including those with 0 XP
  */

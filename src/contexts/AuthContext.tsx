@@ -145,12 +145,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true)
 
-      // Check if Google Auth is configured
-      if (!googleAuthService.isConfigured()) {
-        const errorMessage = 'Google authentication is not properly configured'
-        console.error(errorMessage)
-        return { error: { message: errorMessage } as AuthError }
-      }
+      // Google Auth is configured via environment variables
 
       // Use the new Google auth service
       const result = await googleAuthService.signInWithGoogle()

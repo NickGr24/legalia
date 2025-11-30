@@ -139,6 +139,6 @@ const styles = StyleSheet.create({
   },
   
   disabled: {
-    opacity: 0.5,
+    opacity: 0.7, // Increased from 0.5 for better readability
   },
 });

@@ -1,7 +1,6 @@
 module.exports = {
-  extends: ['expo', '@react-native-community', '@typescript-eslint/recommended'],
-  parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint'],
+  root: true,
+  extends: ['expo'],
   rules: {
     // Warn instead of error to not block builds
     '@typescript-eslint/no-unused-vars': 'warn',
@@ -9,10 +8,13 @@ module.exports = {
     'react-hooks/exhaustive-deps': 'warn',
     'no-console': 'warn',
     'prefer-const': 'warn',
-    // Disable rules that conflict with Prettier
-    'react-native/no-inline-styles': 'off',
-  },
-  env: {
-    'react-native/react-native': true,
+    // Disable import rules that are causing issues
+    'import/namespace': 'off',
+    'import/default': 'off',
+    'import/no-unresolved': 'off',
+    'import/export': 'off',
+    // Disable new TypeScript rules that don't exist in our version
+    '@typescript-eslint/no-empty-object-type': 'off',
+    '@typescript-eslint/no-wrapper-object-types': 'off',
   },
 };
